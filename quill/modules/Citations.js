@@ -1,5 +1,5 @@
 import {SourceTypes} from "../../DSM/SourceTypes";
-import Quill from '../quill';
+import Quill from 'quill';
 import DocumentSourcesModel from "../../DSM/DocumentSourcesModel";
 import SourcesList from "../../DSM/SourcesList";
 import lgEvents, {lgTopics} from '../../lib/events'
