@@ -1,1 +1,1 @@
-module.exports = require('./DSM/DocumentSourcesModel');
+export { default } from "./DSM/DocumentSourcesModel";
