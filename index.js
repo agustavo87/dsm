@@ -1,1 +1,1 @@
-export { default as DefaultExport} from "./DSM/DocumentSourcesModel";
+export { default as default} from "./DSM/DocumentSourcesModel";
