@@ -3,8 +3,8 @@ import Quill from '../../../quill/quill';
 import SourceBlot from '../../../quill/blots/source';
 import Reference from '../../../DSM/Reference';
 import {SourceTypes} from '../../../DSM/SourceTypes';
-import lgEvents, {lgTopics} from "../../../lib/events";
-import {queryProxy as $, queryProxyAll as $$} from "../../../lib/functions";
+import lgEvents, {lgTopics} from "../../../utils/events";
+import {queryProxy as $, queryProxyAll as $$} from "../../../utils/functions";
 import SourceReferencesModel from '../../../DSM/SourceReferencesModel';
 
 it('construye adecuadamente el módulo', () => {

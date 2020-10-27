@@ -1,5 +1,5 @@
 import {SourceTypes} from '../../DSM/SourceTypes';
-import lgEvents, {lgTopics} from "../../lib/events";
+import lgEvents, {lgTopics} from "../../utils/events";
 
 const mockListener = jest.fn(function (type, topic, data) {
     // console.log('Escuché:', type, topic, data);

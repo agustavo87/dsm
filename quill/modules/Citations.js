@@ -2,7 +2,7 @@ import {SourceTypes} from "../../DSM/SourceTypes";
 import Quill from 'quill';
 import DocumentSourcesModel from "../../DSM/DocumentSourcesModel";
 import SourcesList from "../../DSM/SourcesList";
-import lgEvents, {lgTopics} from '../../lib/events'
+import lgEvents, {lgTopics} from '../../utils/events'
 import Reference from "../../DSM/Reference";
 import hasIn from 'lodash/hasIn';
 

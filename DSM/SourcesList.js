@@ -1,4 +1,4 @@
-import lgEvents, {lgTopics} from "../lib/events";
+import lgEvents, {lgTopics} from "../utils/events";
 import DocumentSourcesModel from './DocumentSourcesModel';
 
 

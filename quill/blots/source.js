@@ -1,5 +1,5 @@
 import Embed from "quill/blots/embed";
-import lgEvents, {lgTopics} from "../../lib/events";
+import lgEvents, {lgTopics} from "../../utils/events";
 
 
 class SourceBlot extends Embed {

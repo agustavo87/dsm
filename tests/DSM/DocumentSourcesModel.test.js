@@ -3,7 +3,7 @@ import {SourceTypes} from '../../DSM/SourceTypes';
 import Reference from '../../DSM/Reference';
 import minBy from 'lodash/minBy';
 
-import lgEvents, {lgTopics} from '../../lib/events.js';
+import lgEvents, {lgTopics} from '../../utils/events.js';
 import SourcesList from "../../DSM/SourcesList";
 
 jest.mock('../../quill/blots/source');
