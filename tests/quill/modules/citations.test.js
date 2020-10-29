@@ -7,8 +7,11 @@ import lgEvents, {lgTopics} from "../../../utils/events";
 import {queryProxy as $, queryProxyAll as $$} from "../../../utils/functions";
 import SourceReferencesModel from '../../../DSM/SourceReferencesModel';
 
+
+
 it('construye adecuadamente el módulo', () => {
     const CitationsMock = jest.createMockFromModule('../../../quill/modules/Citations').default;
+   
     Quill.register('modules/citation', CitationsMock);
     let container = document.createElement('DIV');
     let quill = new Quill(container, {
@@ -26,6 +29,7 @@ describe ('Configuración', () => {
     let modCitations = null;
 
     beforeAll(() => {
+        // Quill.register(SourceBlot);
         Quill.register('modules/citation', Citations);
         document.body.innerHTML = '<div id="editor"></div>';
         container = document.getElementById('editor');
