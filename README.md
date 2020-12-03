@@ -1,18 +1,21 @@
 # About
-Model for Reference Embeds in Quill. Also Module base class to implement and model blots with diferent HTML content as indexed elements that possibly refer to external source.
+Model for Quill Embeds that have to be indexed and may reference to same source. 
+A Module base class is also provided to implement and model blots with diferent HTML content (e.g., headers, images, tables, figures, formulas)
 
 # Model
 
 It makes an imaginary two dimensional matrix where:
-- one dimesion *i* represents the diferentes *Sources* of a Document (DSM/DocumentSourcesModel.js)
-- other dimension *j* represents the diferentes *References* in the document to the same Source. (DSM/SourceReferencesModel.js)
-- Each *Reference* (DSM/Referenece.js) is an interface to a *SourceBlot* (quill/blots/source.js) in Quills document.
-- Each Model of Sources, model certain *SurcesTypes* (DSM/SourceTypes.js).
+- one dimesion *i* represents the diferentes **Sources** of a Document (DSM/DocumentSourcesModel.js)
+- other dimension *j* represents the diferentes **References** in the document to the same Source. (DSM/SourceReferencesModel.js)
+- Each **Reference** (DSM/Referenece.js) is an interface to a *SourceBlot* (quill/blots/source.js) in Quills document. Each SourceBlot is a Quill's interface to a HTML node.
+- Each Model of Sources, model certain **SurcesTypes** (DSM/SourceTypes.js).
+
+It keeps the *i* dimension ordered in accordance to the position of the **first** ocurrence of a Reference of such source. The first sources in appear, are ordered before the others.
+
+# Sources Quill Modules
 
 It is implemented as a Quill module. *Citations* is a basic module than can be easily extendended 
 to make more complex types of sources (Images, Tables, Links, Headers,  anything that could be of interest in be indexed). 
-
-# Sources Quill Modules
 
 The implementation of *Citation* is very basic and actually it is meant to be implemented on the quill
 module configuration.
@@ -34,10 +37,9 @@ Quill.register('modules/citation', Citations);
 
 
 const quillOptions = {
-    placeholder: 'Compon algo épico..',
+    placeholder: 'Make something epic..',
     theme: 'bubble',
     modules: {
-        toolbar: '#toolbar',
         citation: {
             type: SourceTypes.CITATION_DOCUMENT,
             class: 'citation',
@@ -55,8 +57,9 @@ const quill = new Quill(quillContainer, quillOptions);
 // Gets the module
 const citations = quill.getModule('citation');
 
-citations.put('gus2020'); // Ads a citation to the source identified with the 'gus2020' key, 
-                          // in the current location of the cursor
+// Ads a citation to the source identified with the 'gus2020' key, 
+// in the current location of the cursor
+citations.put('gus2020'); 
 ```
 
 

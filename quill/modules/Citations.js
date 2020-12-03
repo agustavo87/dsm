@@ -11,18 +11,19 @@ import hasIn from 'lodash/hasIn';
  * @type {object}
  * @property {SourcesTypes} type - The type of source to be modeled.
  * @property {string} class - The CSS class to be appended to the main node.
+ * @property {ReferenceRenderHandlers} handlers - The cb to handle the create,
+ *                                     remove, update states.
  */
 
 /**
  * Modulo de base para modelar citaciones
  */
 export default class Citations {
-
     /**
      * Creates the Citations Module.
      * 
      * @param {Quill} quill - La instancia de quill
-     * @param {CitationsProperties} options -  un conjunto de opciones 
+     * @param {CitationsProperties} options 
      */
     constructor(quill, options) {
 
@@ -64,23 +65,6 @@ export default class Citations {
         }
     }
 
-    // todo:chequear si lo llaman de otros lados.
-    // create(SourceBlot) {
-    //     let span = SourceBlot.contentNode;
-    //     span.classList.add(this._class);
-    //     span.dataset.n = '';
-    //     if(hasIn(this.options, 'handlers.create')) {
-    //         this.options.handlers.create(
-    //             span,
-    //             {
-    //                 i:null,
-    //                 key:SourceBlot.domNode.dataset.key
-    //             },
-    //             this
-    //         );
-    //     }
-    // }
-
     register(type, topic, data) {
         if (this.quill.scroll !== data.blot.scroll) {
             // console.warn('[Citation.register]: llamada desde una instancia distinta de quill.');
@@ -113,9 +97,6 @@ export default class Citations {
 
         // this.create(ref.blot); // todo:chequear si lo llaman de otros lados.
         let i = this._DSM.put(ref);
-
-
-
 
         lgEvents.emit(
             this._type,
@@ -277,15 +258,44 @@ export default class Citations {
     }
 }
 
+
+/**
+ * @typedef ReferenceRenderHandlers
+ * @type {object}
+ * @property {ReferenceRenderCallback} create -
+ * @property {ReferenceRenderCallback} update 
+ * @property {ReferenceRenderCallback} remove
+ */
+
+ /**
+ * Handles the render events of the References Blots Embeded in Quills Document
+ * 
+ * @callback ReferenceRenderCallback
+ * @param {external:HTMLElement} node - The node of the quill embed element
+ * @param {object} data - Of the reference {i, key} | {i, key. id} : remove
+ * @param {Citations} controller - The citations object that manage the Reference
+ */
+
+ /**
+  * Default Handler. 
+  * Makes just default attributes to the node.
+  * 
+  * @type {ReferenceRenderHandlers}
+  */
 const defaultHandlers =  {
+    /** @type {ReferenceRenderCallback} */
     create: function (node, data, controller) {
         node.classList.add(controller.class);
         node.dataset.n = (data.i !== null  ? data.i + 1 : '');
     },
+    /** @type {ReferenceRenderCallback} */
     update: function (node, data, controller) {
         node.dataset.n = data.i + 1;
     },
+    /** @type {ReferenceRenderCallback} */
     remove: () => {}
 };
 
 Citations.handlers = defaultHandlers;
+
+
