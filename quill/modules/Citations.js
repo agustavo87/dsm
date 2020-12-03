@@ -6,7 +6,24 @@ import lgEvents, {lgTopics} from '../../utils/events'
 import Reference from "../../DSM/Reference";
 import hasIn from 'lodash/hasIn';
 
+/**
+ * @typedef CitationsProperties
+ * @type {object}
+ * @property {SourcesTypes} type - The type of source to be modeled.
+ * @property {string} class - The CSS class to be appended to the main node.
+ */
+
+/**
+ * Modulo de base para modelar citaciones
+ */
 export default class Citations {
+
+    /**
+     * Creates the Citations Module.
+     * 
+     * @param {Quill} quill - La instancia de quill
+     * @param {CitationsProperties} options -  un conjunto de opciones 
+     */
     constructor(quill, options) {
 
         this.options = options;
