@@ -1,3 +1,5 @@
+/** @typedef {import('../../DSM/SourceTypes').SourcesTypes} SourceTypes */
+
 import Embed from "quill/blots/embed";
 import lgEvents, {lgTopics} from "../../utils/events";
 

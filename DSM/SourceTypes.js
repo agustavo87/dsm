@@ -1,5 +1,11 @@
 
 /**
+ * @typedef {object} SourcesTypes
+ * @enum {strings} SpirceTypes
+ * 
+ */
+
+/**
  * Types of Sources of DSM
  * @readonly
  * @enum {string}
@@ -10,7 +16,7 @@ const SourceTypes = {
 
 /**
  * Determine if the type is valid type of DSM
- * @param {string} type Test
+ * @param {SourcesTypes} type Test
  */
 function isValidType(type) {
     return (Object.values(SourceTypes).indexOf(type) > -1);
