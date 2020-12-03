@@ -2,8 +2,17 @@ import lgEvents, {lgTopics} from '../utils/events'
 import {isValidType} from "./SourceTypes";
 import SourceReferencesModel from "./SourceReferencesModel";
 
+
+/**
+ * Model the Sources of certain type of a Quill Document.
+ */
 export default class DocumentSourcesModel {
 
+    /**
+     * Construct the Model 
+     * 
+     * @param {SourcesType} type 
+     */
     constructor (type) {
         this.errored = false;
         this.error = null;
@@ -19,8 +28,9 @@ export default class DocumentSourcesModel {
     }
 
     /**
-     *
-     * @param Reference
+     * Adds a Reference
+     * 
+     * @param {Reference}
      * @returns {number} Source Index after updateAll.
      */
     put(Reference) {
@@ -54,6 +64,14 @@ export default class DocumentSourcesModel {
         return i;
     }
 
+
+    /**
+     * Locate a determined source (model) in certain order in the model
+     * of sources, by the index of its first element.
+     * 
+     * @param {SourceReferencesModel} SourceModel 
+     * @returns {number} i - The order in wich the model was located.
+     */
     _locate(SourceModel) {
         let locatingSMIndex = SourceModel.first.index;
         let i = this._sources.length;
@@ -69,6 +87,12 @@ export default class DocumentSourcesModel {
         return i;
     }
 
+    /**
+     * Relocate some model
+     * 
+     * @param {number} i_SourceModel - index of the model
+     * @returns {number} the index of the new (or old location
+     */
     _reLocate(i_SourceModel) {
 
         if (this._sources.length > 1) {
@@ -80,10 +104,24 @@ export default class DocumentSourcesModel {
         return i_SourceModel;
     }
 
+    
+    /**
+     * Removes a reference
+     * 
+     * @param {Reference} Reference - The reference to be removed
+     */
     remove(Reference) {
         this.removeReference(Reference.id, Reference.key)
     }
 
+    /**
+     * Removes a reference by its id and or key.
+     * 
+     * @param {number} id - The id of the SourceBlot of the Reference
+     * @param {string} key - The key of the source of the reference.
+     * @returns {number} The i of the reference, or -1 if error
+     * @throws {Error}
+     */
     removeReference(id, key = null) {
         if (!key) {
             key = this.referenceSource(id).key;
@@ -120,19 +158,45 @@ export default class DocumentSourcesModel {
         return i;
     }
 
-
+    /**
+     * The Source Type that is modeled.
+     * @returns {SourcesType}
+     */
     get type() {return this._type}
 
+    /**
+     * Number of diferent sources.
+     * @returns {number}
+     */
     get length() {return this._sources.length}
 
+    /**
+     * Get a source by its index.
+     * 
+     * @param {number} i - the index of source
+     * @returns {SourceReferencesModel}
+     */
     sourceByI(i) {
         return this._sources[i];
     }
 
+    /**
+     * Gets a source by its key.
+     * 
+     * @param {string} key - The key of the source
+     * @returns {SourceReferencesModel}
+     */
     source(key) {
         return this._sources.find( source => source.key === key);
     }
 
+    /**
+     * Gets a Reference
+     * 
+     * @param {string} key - The key of the reference to get
+     * @param {number} id - The id of the SourceBlot of the Reference.
+     * @returns {Reference}
+     */
     reference(key, id) {
         let source = this.source(key);
         if (source) {
@@ -146,10 +210,22 @@ export default class DocumentSourcesModel {
         }
     }
 
+    /**
+     * Gets the index of a source.
+     * 
+     * @param {string} key - The key of the source to gt
+     * @returns {number} the index of the source model.
+     */
     sourceIndex(key) {
         return this._sources.findIndex(source => source.key === key);
     }
 
+    /**
+     * Gets the ReferenceModel of a Reference by its id
+     * 
+     * @param {number} id - The id of the source.
+     * @returns {SourceReferencesModel} 
+     */
     referenceSource(id) {
         return  this._sources.find( source => (typeof source.get(id)) !== 'undefined');
     }

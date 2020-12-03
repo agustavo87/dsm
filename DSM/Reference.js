@@ -1,15 +1,16 @@
+import Quill from 'quill';
 import SourceBlot from '../quill/blots/source';
 
 /**
- * Un Wrapper que brinda funciones útiles para administrar
- * SourceBlots
+ * A wrapper to handle SourceBlots info.
  */
 export default class Reference {
+
     /**
-     * Crea una Referencia a partir de un SourceBlot de Quill.
-     * @param blot El SourceBlot a usarse como Referencia
-     * @param quill Se recomienda siempre especificar! De lo contrario se utiliza el valor
-     * establecido por defecto en Reference.quill.
+     * Creates Reference from SourceBlot.
+     * 
+     * @param {SourceBlot} blot
+     * @param {Quill} quill instance. It's recomended specify on construction
      */
     constructor (blot = false, quill = false) {
         if (!(blot instanceof SourceBlot)) {
@@ -20,6 +21,12 @@ export default class Reference {
         } else if (Reference.quill) { // Por defecto
             // no se recomienda, debido a que si hay multiples instancias de quill en
             // un mismo proceso de ejecución, van reemplazarse.
+
+            /**
+             * @todo arrojaría error porque Reference puede ser 'null' (como lo es),
+             *  debería chequearse que Reference.quill sea válida.
+             */
+
             this.quill = Reference.quill;
         } else {
             throw new Error('No se inyectado referencia a instancia de Quill');
@@ -52,4 +59,5 @@ export default class Reference {
         return this._blot.id;
     }
 }
+/** Default quill instance */
 Reference.quill = null;

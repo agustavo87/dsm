@@ -2,6 +2,9 @@ import lgEvents, {lgTopics} from "../utils/events";
 import DocumentSourcesModel from './DocumentSourcesModel';
 
 
+/**
+ * Just presents a list of the sources of a DocumentSourcesModel.
+ */
 export default class SourcesList {
     constructor(DSM, shadow = false) {
         if (!(DSM instanceof DocumentSourcesModel)) {
