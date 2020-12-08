@@ -1,24 +1,25 @@
-# About
-Model for Quill Embeds that have to be indexed and may reference to same source. 
+# Document Sources Model
+## About
+Model for Quill Embeds that have to be indexed and may reference to some same source. 
 A Module base class is also provided to implement and model blots with diferent HTML content (e.g., headers, images, tables, figures, formulas)
 
-# Model
+## Model
 
 It makes an imaginary two dimensional matrix where:
-- one dimesion *i* represents the diferentes **Sources** of a Document (DSM/DocumentSourcesModel.js)
-- other dimension *j* represents the diferentes **References** in the document to the same Source. (DSM/SourceReferencesModel.js)
-- Each **Reference** (DSM/Referenece.js) is an interface to a *SourceBlot* (quill/blots/source.js) in Quills document. Each SourceBlot is a Quill's interface to a HTML node.
-- Each Model of Sources, model certain **SurcesTypes** (DSM/SourceTypes.js).
+- one dimesion *i* represents the diferents **Sources** of a Document (DSM/DocumentSourcesModel.js)
+- other dimension *j* represents the diferents **References** in the document to the same Source. (DSM/SourceReferencesModel.js)
+- Each **Reference** (DSM/Referenece.js) is an interface to a **SourceBlot** (quill/blots/source.js) in Quills document. Each SourceBlot is a Quill's interface to a HTML node.
+- Each Model of Sources, model certain **SourcesTypes** (DSM/SourceTypes.js). For each source type, each source
+is identified by an arbitrary string **key** thant could be anything as a tipical integer ID, or some Tag (e.g., surname2020).
 
 It keeps the *i* dimension ordered in accordance to the position of the **first** ocurrence of a Reference of such source. The first sources in appear, are ordered before the others.
 
-# Sources Quill Modules
+## Sources Quill Modules
 
-It is implemented as a Quill module. *Citations* is a basic module than can be easily extendended 
-to make more complex types of sources (Images, Tables, Links, Headers,  anything that could be of interest in be indexed). 
+It is implemented as a Quill module. *Citations* is a basic module that can be easily extended 
+to make more complex types of sources (images, tables, links, headers, anything that could be of interest in to be indexed). 
 
-The implementation of *Citation* is very basic and actually it is meant to be implemented on the quill
-module configuration.
+The implementation of *Citation* is very basic and actually it is meant to be used by the module configuration of quill.
 
 For example:
 

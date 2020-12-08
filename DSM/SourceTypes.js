@@ -1,14 +1,9 @@
 
-/**
- * @typedef {object} SourcesTypes
- * @enum {strings} SpirceTypes
- * 
- */
 
 /**
  * Types of Sources of DSM
  * @readonly
- * @enum {string}
+ * @enum {string} SourceTypes
  */
 const SourceTypes = {
     CITATION_DOCUMENT: 'citation-document'
