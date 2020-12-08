@@ -9,7 +9,7 @@ import SourceReferencesModel from '../../../DSM/SourceReferencesModel';
 
 
 
-it('construye adecuadamente el módulo', () => {
+it('is called by Quill', () => {
     const CitationsMock = jest.createMockFromModule('../../../quill/modules/Citations').default;
    
     Quill.register('modules/citation', CitationsMock);
@@ -22,14 +22,12 @@ it('construye adecuadamente el módulo', () => {
     expect(CitationsMock).toBeCalled();
 });
 
-
-describe ('Configuración', () => {
+describe ('Custom citation', () => {
     let quill = null;
     let container = null;
     let modCitations = null;
 
     beforeAll(() => {
-        // Quill.register(SourceBlot);
         Quill.register('modules/citation', Citations);
         document.body.innerHTML = '<div id="editor"></div>';
         container = document.getElementById('editor');
@@ -47,8 +45,11 @@ describe ('Configuración', () => {
         SourceBlot.lastId = -1;
     });
 
-    it('Introduce una cita', () => {
+    it('is created and updated as specified by module configuration', () => {
+        // mock info of a post
         const postID = '1041';
+
+        // mock info from a mock source provider
         const mockUpdate = jest.fn();
         const mockGet = jest.fn(function (key) {
             return {
@@ -61,6 +62,7 @@ describe ('Configuración', () => {
             }
         });
 
+        // Mock source provider
         const mockSP = {
             get: mockGet,
             update: mockUpdate
@@ -68,8 +70,8 @@ describe ('Configuración', () => {
 
         /**
          *  data{key, n, i[source index]}
-         *  node [nodo de citación]
-         *  controller [source controller encargado de las operaciones -citation en este caso]
+         *  node [citation node]
+         *  controller [source controller -citation]
          */
         quill = new Quill(container, {
             modules: {
@@ -83,7 +85,7 @@ describe ('Configuración', () => {
                                 source.author.lastName + ' ' +
                                 source.year + ')';
                             node.setAttribute('title', source.title);
-                            mockSP.update({
+                            mockSP.update({ // just a mock binding.
                                 bind: {
                                     key: data.key,
                                     source: postID
@@ -125,11 +127,9 @@ describe ('Configuración', () => {
         expect(citationNode.innerHTML).toMatch(expectedText);
         expect(citationNode.getAttribute('title')).toMatch(source.title);
 
-
         // console.log('RESULTADO: \n', quill.scroll.domNode.innerHTML);
         expect(mockUpdate).toBeCalled();
 
-        mockUpdate.mockClear();
         mockUpdate.mockClear();
         let ref = modCitations.source(key).first;
         // console.log(quill.scroll.domNode.innerHTML);
@@ -142,8 +142,7 @@ describe ('Configuración', () => {
     });
 });
 
-
-describe ('Uso del módulo', () => {
+describe ('Module operations', () => {
     let quill = null;
     let container = null;
     let modCitations = null;
@@ -175,17 +174,14 @@ describe ('Uso del módulo', () => {
         SourceBlot.lastId = -1;
     });
 
-    it('Introduce una cita', () => {
+    it('put method is called by quill', () => {
         let spy = jest.spyOn(modCitations, 'put');
         modCitations.put('a2');
-        // console.log(quill.getContents());
-        // console.log(quill.scroll.domNode.innerHTML);
         expect(spy).toBeCalled();
-
         spy.mockRestore();
     });
 
-    it('Mantiene lista sombra', () => {
+    it('keeps a shadow list of sources', () => {
         const key = 'a2';
         modCitations.put(key);
         // console.log('shadow list:', modCitations.data.list);
@@ -195,7 +191,7 @@ describe ('Uso del módulo', () => {
         expect(modCitations.data.list).toEqual([key]);
     });
 
-    it('Responde adecuadamente a los eventos', done => {
+    it('emits events on new and update reference/s', done => {
         const sourceKey = 'a3';
 
         function registrado(type, topic, data) {
@@ -229,7 +225,7 @@ describe ('Uso del módulo', () => {
 
     });
 
-    it('inserción de una referencia', done => {
+    it('inserts a reference', done => {
         const sourceKey = 'a3';
         const sourceDelta = {
             insert: {
@@ -273,13 +269,9 @@ describe ('Uso del módulo', () => {
         // console.log(JSON.stringify(quill.getContents().ops[0]));
         // expect(quill.getContents().ops[0]).toEqual(expect.objectContaining(sourceDelta));
         expect(quill.getContents().ops[0]).toMatchObject(sourceDelta);
-
-
     });
 
-    it('Registra adecuadamente una fuente', done => {
-        // console.log('test: \'Registra adecuadamente una fuente\'');
-
+    it('register a source as expected', done => {
 
         lgEvents.on(
             SourceTypes.CITATION_DOCUMENT,
@@ -321,7 +313,7 @@ describe ('Uso del módulo', () => {
 
     });
 
-    it('Monta adecuadamente la fuente', done => {
+    it('mount the source node in the DOM as expected', done => {
 
         const key = 'a3';
 
@@ -345,7 +337,7 @@ describe ('Uso del módulo', () => {
         modCitations.put(key);
     });
 
-    it('Formatea adecuadamente la cita', done => {
+    it('makes the citation node with expected attributes', done => {
         // console.log(':::::Formatea adecuadamente la cita::::::');
         const key = 'a3';
 
@@ -463,7 +455,7 @@ describe ('Uso del módulo', () => {
         }
     }
 
-    it('Numera adecuadamente la cita', done => {
+    it('numbers accordingly the citation', done => {
         // console.log('::::::Numera adecuadamente la cita:::::::::');
         const key = 'a3';
 
@@ -476,7 +468,7 @@ describe ('Uso del módulo', () => {
         modCitations.put(key);
     });
 
-    it('Aumenta al poner fuente nueva', done => {
+    it('increases the citation number', done => {
         // console.log('......AUMENTAR NUMERACION........');
 
         const keys = ['a3', 'a4'];
@@ -492,7 +484,7 @@ describe ('Uso del módulo', () => {
 
     });
 
-    it('Remueve adecuadamente la cita', done => {
+    it('removes the citation as expected', done => {
 
         const key = 'a3';
 
@@ -515,7 +507,7 @@ describe ('Uso del módulo', () => {
         // console.log(Citations.source(key).list);
     });
 
-    it('Reorganiza numeración al insertar', done => {
+    it('reorders the numeration', done => {
         // console.log('......REORGANIZAR NUMERACIÓN................');
 
         const testData = {
@@ -557,7 +549,7 @@ describe ('Uso del módulo', () => {
 
     });
 
-    it('Reorganiza numeración al borrar', done => {
+    it('reorders the numeration on delete', done => {
         // console.log('......REORGANIZAR NUMERACIÓN................');
 
         const testData = {
@@ -598,7 +590,7 @@ describe ('Uso del módulo', () => {
         quill.deleteText(firstRef.index, 1);
     });
 
-    it('Reorganiza numeración con borrado conjunto', done => {
+    it('reorders the numeration on masive deletion', done => {
         // console.log('......REORGANIZAR Con borrado conjunto................');
 
         const testData = {
@@ -632,5 +624,44 @@ describe ('Uso del módulo', () => {
         quill.deleteText(firstRef.index,(thirdRef.index - firstRef.index) + 1);
         // console.log(content.innerHTML);
     });
+
+});
+
+describe('Citations extension', () => {
+
+    it('can be extended', () => {
+        class Imagen extends Citations {}
+        Imagen.class = 'logos-image';
+        SourceTypes['IMAGEN'] = 'document.image';
+        Imagen.type = SourceTypes.IMAGEN;
+
+        Quill.register('modules/image', Imagen);
+        document.body.innerHTML = '<div id="editor"></div>';
+        let container = document.getElementById('editor');
+        
+
+        let quill = new Quill(container, {
+            modules: {
+                image: {}
+            }
+        });
+
+        let modImages = quill.getModule('image');
+        const key = 'gato'
+        modImages.put(key);
+        expect(true).toBe(true);
+        // console.log(container.innerHTML);
+        let sourceNode = $('.' + SourceBlot.className, container);
+        let citationNode = $('.' + modImages.class, sourceNode);
+
+        // console.log(sourceNode.outerHTML);
+        // console.log(citationNode.outerHTML);
+
+        expect(sourceNode.dataset.type).toBe(Imagen.type);
+        expect(citationNode.classList.contains(Imagen.class)).toBe(true);
+        expect(Number(citationNode.dataset.n)).toBe(modImages.i(key) + 1);
+        
+    });
+
 
 });

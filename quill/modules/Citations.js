@@ -10,7 +10,7 @@ import hasIn from 'lodash/hasIn';
  * @typedef CitationsProperties
  * @type {object}
  * @property {SourcesTypes} type - The type of source to be modeled.
- * @property {string} class - The CSS class to be appended to the main node.
+ * @property {string} class - The CSS class to0
  * @property {ReferenceRenderHandlers} handlers - The cb to handle the create,
  *                                     remove, update states.
  */
@@ -30,9 +30,10 @@ export default class Citations {
         this.options = options;
         this.quill = quill;
         Reference.quill = quill;
-        this._type = options.type ? options.type : SourceTypes.CITATION_DOCUMENT;
-        this._class = options.class ? options.class : 'citation';
+        this._type = options.type ? options.type : this.constructor.type;
+        this._class = options.class ? options.class : this.constructor.class;
         this._DSM = new DocumentSourcesModel(this._type);
+        this.handlers = this.constructor.handlers;
         this.data = {};
         this.SList = new SourcesList(this._DSM, this.data);
         this.bindEvents();
@@ -75,7 +76,7 @@ export default class Citations {
 
         let ref = new Reference(data.blot, this.quill);
 
-        Citations.handlers.create(
+        this.handlers.create(
             ref.blot.contentNode,
             {
                 i:null,
@@ -117,7 +118,7 @@ export default class Citations {
 
         let i = this._DSM.removeReference(id, key);
 
-        Citations.handlers.remove(
+        this.handlers.remove(
             data.blot.contentNode,
             {
                 i: i,
@@ -149,7 +150,7 @@ export default class Citations {
             let source = this._DSM.sourceByI(i);
             refsUpdated.set(source.key, []);
             source.list.forEach(ref => {
-                    Citations.handlers.update(
+                    this.handlers.update(
                         ref.blot.contentNode,
                         {
                             i: i,
@@ -181,7 +182,7 @@ export default class Citations {
 
     update(type, topic, data) {
         let i = this._DSM.sourceIndex(data.reference.key);
-        Citations.handlers.update(
+        this.handlers.update(
             data.reference.blot.contentNode,
             {
                 i: i,
@@ -297,5 +298,7 @@ const defaultHandlers =  {
 };
 
 Citations.handlers = defaultHandlers;
+Citations.type = SourceTypes.CITATION_DOCUMENT;
+Citations.class = 'citation';
 
 
