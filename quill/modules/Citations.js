@@ -1,3 +1,5 @@
+/** @typedef {import('../../DSM/SourceTypes').SourceTypes} SourceTypes */
+
 import {SourceTypes} from "../../DSM/SourceTypes";
 import Quill from 'quill';
 import DocumentSourcesModel from "../../DSM/DocumentSourcesModel";

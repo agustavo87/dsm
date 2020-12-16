@@ -1,9 +1,12 @@
-
+/**
+ * A number, or a string containing a number.
+ * @typedef {string} SourceTypes
+ */
 
 /**
  * Types of Sources of DSM
  * @readonly
- * @enum {string} SourceTypes
+ * @enum {SourcesTypes} SourceTypes
  */
 const SourceTypes = {
     CITATION_DOCUMENT: 'citation-document'
