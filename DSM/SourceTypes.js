@@ -1,5 +1,5 @@
 /**
- * A number, or a string containing a number.
+ * A type of source of DSM
  * @typedef {string} SourceTypes
  */
 

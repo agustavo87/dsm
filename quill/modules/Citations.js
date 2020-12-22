@@ -9,9 +9,10 @@ import Reference from "../../DSM/Reference";
 import hasIn from 'lodash/hasIn';
 
 /**
- * @typedef CitationsProperties
- * @type {object}
- * @property {SourcesTypes} type - The type of source to be modeled.
+ * Options of de Citations Quill Modulue implementation
+ * of the Document Sources Model (DSM)
+ * @typedef {object} CitationsOptions
+ * @property {SourceTypes} type - The type of source to be modeled.
  * @property {string} class - The CSS class to0
  * @property {ReferenceRenderHandlers} handlers - The cb to handle the create,
  *                                     remove, update states.
@@ -25,7 +26,7 @@ export default class Citations {
      * Creates the Citations Module.
      * 
      * @param {Quill} quill - La instancia de quill
-     * @param {CitationsProperties} options 
+     * @param {CitationsOptions} options 
      */
     constructor(quill, options) {
 
@@ -274,8 +275,8 @@ export default class Citations {
  * Handles the render events of the References Blots Embeded in Quills Document
  * 
  * @callback ReferenceRenderCallback
- * @param {external:HTMLElement} node - The node of the quill embed element
- * @param {object} data - Of the reference {i, key} | {i, key. id} : remove
+ * @param {HTMLElement} node - The node of the quill embed element
+ * @param {Object} data - Of the reference {i, key} | {i, key. id} : remove
  * @param {Citations} controller - The citations object that manage the Reference
  */
 
