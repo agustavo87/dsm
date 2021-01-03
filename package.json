@@ -1,6 +1,6 @@
 {
     "name": "dsm",
-    "version": "0.1.0",
+    "version": "0.1.01",
     "description": "Model of Document Sources for Quill",
     "author": "Gustavo R. Ayala <agustavo87@gmail.com>",
     "keywords": [

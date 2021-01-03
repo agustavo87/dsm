@@ -35,6 +35,10 @@ export default class SourcesList {
 
     _update() {
         // if (this._shadow) {
+            /** @todo me parece que aquí habría que simplemente agregar la lista entera.
+             *  this._shadow.list = this.list; 
+             *  debido al manejo de vue de los arrays y los objetos.
+             */
             this._shadow.list.splice(0);
             this.list.forEach(key => this._shadow.list.push(key))
         // }

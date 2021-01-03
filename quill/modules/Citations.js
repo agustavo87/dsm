@@ -1,7 +1,7 @@
 /** @typedef {import('../../DSM/SourceTypes').SourceTypes} SourceTypes */
 
 import {SourceTypes} from "../../DSM/SourceTypes";
-import Quill from 'quill';
+import Quill from 'quill/core/quill';
 import DocumentSourcesModel from "../../DSM/DocumentSourcesModel";
 import SourcesList from "../../DSM/SourcesList";
 import lgEvents, {lgTopics} from '../../utils/events'
@@ -37,7 +37,7 @@ export default class Citations {
         this._class = options.class ? options.class : this.constructor.class;
         this._DSM = new DocumentSourcesModel(this._type);
         this.handlers = this.constructor.handlers;
-        this.data = {};
+        this.data = {}; // Shadow List
         this.SList = new SourcesList(this._DSM, this.data);
         this.bindEvents();
         // console.log('Citations Construido:', quill.container.id, options);
