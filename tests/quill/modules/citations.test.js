@@ -181,11 +181,50 @@ describe ('Module operations', () => {
         spy.mockRestore();
     });
 
+    it('Calls Reference Render Callbacks as expected', () => {
+        let key='gus2020'
+        modCitations.handlers.create = (node, data, controller) => {
+            expect(node).toBeInstanceOf(HTMLElement)
+            expect(data).toMatchObject({
+                i: null,
+                id: expect.any(Number),
+                key: key
+            })
+            expect(controller).toBeInstanceOf(Citations)
+        }
+
+        modCitations.handlers.update = (node, data, controller) => {
+            expect(node).toBeInstanceOf(HTMLElement)
+            expect(data).toMatchObject({
+                i: expect.any(Number),
+                id: expect.any(Number),
+                key: key
+            })
+            expect(controller).toBeInstanceOf(Citations)
+        }
+
+        modCitations.handlers.remove = (node, data, controller) => {
+            expect(node).toBeInstanceOf(HTMLElement)
+            expect(data).toMatchObject({
+                i: expect.any(Number),
+                id: expect.any(Number),
+                key: key
+            })
+            expect(controller).toBeInstanceOf(Citations)
+        }
+
+        modCitations.put(key);
+        let ref = modCitations.source(key).getByJ(0);
+        // console.log(ref.index);
+        console.log(quill.scroll.domNode.innerHTML);
+        quill.deleteText(ref.index, 1);
+        // console.log(quill.scroll.domNode.innerHTML);
+    })
+
     it('keeps a shadow list of sources', () => {
         const key = 'a2';
         modCitations.put(key);
-        // console.log('shadow list:', modCitations.data.list);
-        // console.log('SourcesList list:', modCitations.SList.list);
+
         expect(modCitations.data.list).toEqual(modCitations.SList.list);
         expect(modCitations.data.list).not.toBe(modCitations.SList.list);
         expect(modCitations.data.list).toEqual([key]);

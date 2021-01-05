@@ -13,7 +13,8 @@ import hasIn from 'lodash/hasIn';
  * of the Document Sources Model (DSM)
  * @typedef {object} CitationsOptions
  * @property {SourceTypes} type - The type of source to be modeled.
- * @property {string} class - The CSS class to0
+ * @property {string} class - The CSS class of the (inner) Reference Node 
+ * (added by the default handlers)
  * @property {ReferenceRenderHandlers} handlers - The cb to handle the create,
  *                                     remove, update states.
  */
@@ -83,7 +84,8 @@ export default class Citations {
             ref.blot.contentNode,
             {
                 i:null,
-                key:ref.key
+                key:ref.key,
+                id: ref.id
             },
             this
         );
@@ -93,7 +95,8 @@ export default class Citations {
                 ref.blot.contentNode,
                 {
                     i:null,
-                    key:ref.key
+                    key:ref.key,
+                    id: ref.id
                 },
                 this
             );
@@ -157,7 +160,8 @@ export default class Citations {
                         ref.blot.contentNode,
                         {
                             i: i,
-                            key: ref.key
+                            key: ref.key,
+                            id: ref.id
                         },
                         this
                     );
@@ -167,7 +171,8 @@ export default class Citations {
                             ref.blot.contentNode,
                             {
                                 i: i,
-                                key: ref.key
+                                key: ref.key,
+                                id: ref.id
                             },
                             this
                         );
@@ -189,7 +194,8 @@ export default class Citations {
             data.reference.blot.contentNode,
             {
                 i: i,
-                key: data.reference.key
+                key: data.reference.key,
+                id: data.reference.id
             },
             this
         );
@@ -199,15 +205,13 @@ export default class Citations {
                 data.reference.blot.contentNode,
                 {
                     i: i,
-                    key: data.reference.key
+                    key: data.reference.key,
+                    id: data.reference.id
                 },
                 this
             );
         }
-        // console.log('[update] actualizando fuente ' + data.reference.key +
-        //     ', n=' + (i + 1));
 
-        // console.log('[update] Emitiendo SourceUpdated Listeners:', lgEvents._emitter.listeners(lgTopics.SOURCE_UPDATED + '/' + this._type));
         let ref = new Map();
         ref.set(data.reference.key, [data.reference]);
         lgEvents.emit(this._type, lgTopics.SOURCE_UPDATED, {references: ref, target: this});
@@ -266,17 +270,18 @@ export default class Citations {
 /**
  * @typedef ReferenceRenderHandlers
  * @type {object}
- * @property {ReferenceRenderCallback} create -
+ * @property {ReferenceRenderCallback} create
  * @property {ReferenceRenderCallback} update 
  * @property {ReferenceRenderCallback} remove
  */
 
  /**
  * Handles the render events of the References Blots Embeded in Quills Document
+ * create: data.i = null
  * 
  * @callback ReferenceRenderCallback
  * @param {HTMLElement} node - The node of the quill embed element
- * @param {{i: number, id: number, key:string}} data - Of the reference {i, key} | {i, key. id} : remove
+ * @param {{i: number, id: number, key:string}} data
  * @param {Citations} controller - The citations object that manage the Reference
  */
 
