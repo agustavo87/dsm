@@ -276,7 +276,7 @@ export default class Citations {
  * 
  * @callback ReferenceRenderCallback
  * @param {HTMLElement} node - The node of the quill embed element
- * @param {Object} data - Of the reference {i, key} | {i, key. id} : remove
+ * @param {{i: number, id: number, key:string}} data - Of the reference {i, key} | {i, key. id} : remove
  * @param {Citations} controller - The citations object that manage the Reference
  */
 
