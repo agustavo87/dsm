@@ -14,8 +14,8 @@
         "test": "jest"
     },
     "dependencies": {
-        "quill": "^1.3.7",
-        "lodash": "^4.17.19"
+        "lodash": "^4.17.19",
+        "quill": "github:agustavo87/quill#dist"
     },
     "devDependencies": {
         "@babel/core": "^7.12.3",
