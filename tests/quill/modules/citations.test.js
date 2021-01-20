@@ -149,12 +149,15 @@ describe ('Module operations', () => {
 
     beforeAll(() => {
         Quill.register('modules/citation', Citations);
-        document.body.innerHTML = '<div id="editor"></div>';
-        container = document.getElementById('editor');
+        // document.body.innerHTML = '<div id="editor"></div>';
+        // container = document.getElementById('editor');
     });
 
     beforeEach(() => {
         // console.log('......INICIANDO......');
+        quill = null;
+        document.body.innerHTML = '<div id="editor"></div>';
+        container = document.getElementById('editor');
         quill = new Quill(container, {
             modules: {
                 citation: {
@@ -172,6 +175,7 @@ describe ('Module operations', () => {
         modCitations.reset();
         quill.setContents();
         SourceBlot.lastId = -1;
+
     });
 
     it('put method is called by quill', () => {
@@ -183,7 +187,9 @@ describe ('Module operations', () => {
 
     it('Calls Reference Render Callbacks as expected', () => {
         let key='gus2020'
-        modCitations.handlers.create = (node, data, controller) => {
+        if (!modCitations.options.handlers) modCitations.options['handlers'] = {};
+
+        modCitations.options.handlers.create = (node, data, controller) => {
             expect(node).toBeInstanceOf(HTMLElement)
             expect(data).toMatchObject({
                 i: null,
@@ -193,7 +199,7 @@ describe ('Module operations', () => {
             expect(controller).toBeInstanceOf(Citations)
         }
 
-        modCitations.handlers.update = (node, data, controller) => {
+        modCitations.options.handlers.update = (node, data, controller) => {
             expect(node).toBeInstanceOf(HTMLElement)
             expect(data).toMatchObject({
                 i: expect.any(Number),
@@ -203,7 +209,7 @@ describe ('Module operations', () => {
             expect(controller).toBeInstanceOf(Citations)
         }
 
-        modCitations.handlers.remove = (node, data, controller) => {
+        modCitations.options.handlers.remove = (node, data, controller) => {
             expect(node).toBeInstanceOf(HTMLElement)
             expect(data).toMatchObject({
                 i: expect.any(Number),
@@ -216,7 +222,7 @@ describe ('Module operations', () => {
         modCitations.put(key);
         let ref = modCitations.source(key).getByJ(0);
         // console.log(ref.index);
-        console.log(quill.scroll.domNode.innerHTML);
+        // console.log(quill.scroll.domNode.innerHTML);
         quill.deleteText(ref.index, 1);
         // console.log(quill.scroll.domNode.innerHTML);
     })
@@ -229,6 +235,8 @@ describe ('Module operations', () => {
         expect(modCitations.data.list).not.toBe(modCitations.SList.list);
         expect(modCitations.data.list).toEqual([key]);
     });
+
+
 
     it('emits events on new and update reference/s', done => {
         const sourceKey = 'a3';
@@ -263,6 +271,8 @@ describe ('Module operations', () => {
         modCitations.put(sourceKey);
 
     });
+
+
 
     it('inserts a reference', done => {
         const sourceKey = 'a3';
@@ -310,6 +320,7 @@ describe ('Module operations', () => {
         expect(quill.getContents().ops[0]).toMatchObject(sourceDelta);
     });
 
+
     it('register a source as expected', done => {
 
         lgEvents.on(
@@ -352,6 +363,7 @@ describe ('Module operations', () => {
 
     });
 
+
     it('mount the source node in the DOM as expected', done => {
 
         const key = 'a3';
@@ -375,6 +387,8 @@ describe ('Module operations', () => {
 
         modCitations.put(key);
     });
+
+
 
     it('makes the citation node with expected attributes', done => {
         // console.log(':::::Formatea adecuadamente la cita::::::');
@@ -401,6 +415,188 @@ describe ('Module operations', () => {
 
         modCitations.put(key);
     });
+
+        
+
+    it('numbers accordingly the citation', done => {
+        // console.log('::::::Numera adecuadamente la cita:::::::::');
+        const key = 'a3';
+
+        lgEvents.on(
+            SourceTypes.CITATION_DOCUMENT,
+            lgTopics.SOURCE_UPDATED,
+            checkCorrespondence.bind(this, done, {key:key})
+        );
+
+        modCitations.put(key);
+    });
+
+        
+    it('increases the citation number', done => {
+        // console.log('......AUMENTAR NUMERACION........');
+
+        const keys = ['a3', 'a4'];
+
+
+        lgEvents.on(
+            SourceTypes.CITATION_DOCUMENT,
+            lgTopics.SOURCE_UPDATED,
+            checkCorrespondence.bind(this, done, {keys:keys})
+        );
+
+        keys.forEach(key => modCitations.put(key));
+
+    });
+
+    
+
+    it('removes the citation as expected', done => {
+
+        const key = 'a3';
+
+        lgEvents.on(
+            SourceTypes.CITATION_DOCUMENT,
+            lgTopics.SOURCE_REFERENCE_REMOVED,
+            checkSourceLength.bind(this, done, {key:key})
+        );
+
+        modCitations.put(key);
+        modCitations.put(key);
+        // console.log(Citations.source(key).length);
+        // console.log(Citations.source(key).list);
+
+        let ref = modCitations.source(key).getByJ(1);
+        // console.log(quill.scroll.domNode.innerHTML);
+        quill.deleteText(ref.index, 1);
+        // console.log(quill.scroll.domNode.innerHTML);
+        // console.log(Citations.source(key).length);
+        // console.log(Citations.source(key).list);
+    });
+
+    
+
+    it('reorders the numeration', done => {
+        // console.log('......REORGANIZAR NUMERACIÓN................');
+
+        const testData = {
+            keysSets: [
+                [
+                    {index: -1, key: 'a2'},
+                    {index: -1, key: 'a3'},
+                    {index: 0, key: 'a3'}
+                ],
+                [
+                    {index: 0, key: 'a2'}
+                ]
+            ],
+            finalExpectedOrder: [
+                {key: 'a2', n: 1},
+                {key: 'a3', n: 2},
+                {key: 'a2', n: 1},
+                {key: 'a3', n: 2},
+            ]
+        };
+
+
+        lgEvents.on(
+            SourceTypes.CITATION_DOCUMENT,
+            lgTopics.SOURCE_UPDATED,
+            checkCorrespondence.bind(this, done, testData)
+        );
+
+        testData.keysSets[0].forEach(ref => modCitations.put(ref.key, ref.index));
+
+        lgEvents.on(
+            SourceTypes.CITATION_DOCUMENT,
+            lgTopics.SOURCE_UPDATED,
+            checkExpectedOrder.bind(this, done, testData)
+        );
+
+        let lastRef = testData.keysSets[1][0];
+        modCitations.put(lastRef.key, lastRef.index);
+
+    });
+
+    
+
+    it('reorders the numeration on delete', done => {
+        // console.log('......REORGANIZAR NUMERACIÓN................');
+
+        const testData = {
+            keysSets: [
+                [
+                    {index: -1, key: 'a2'},
+                    {index: -1, key: 'a3'},
+                    {index: 0, key: 'a3'},
+                    {index: 0, key: 'a2'}
+                ]
+            ],
+            finalExpectedOrder: [
+                // {key: 'a2', n: 1},
+                {key: 'a3', n: 1},
+                {key: 'a2', n: 2},
+                {key: 'a3', n: 1},
+            ]
+        };
+
+
+        lgEvents.on(
+            SourceTypes.CITATION_DOCUMENT,
+            lgTopics.SOURCE_UPDATED,
+            checkCorrespondence.bind(this, done, testData)
+        );
+
+        testData.keysSets[0].forEach(ref => modCitations.put(ref.key, ref.index));
+
+        lgEvents.on(
+            SourceTypes.CITATION_DOCUMENT,
+            lgTopics.SOURCE_UPDATED,
+            checkExpectedOrder.bind(this, done, testData)
+        );
+
+        let firstRefNode = $('.' + SourceBlot.className, quill.scroll.domNode);
+        let firstRef = modCitations.ref(firstRefNode.dataset.id);
+        expect(firstRef).toBeInstanceOf(Reference);
+        quill.deleteText(firstRef.index, 1);
+    });
+
+    
+
+    it('reorders the numeration on masive deletion', done => {
+        // console.log('......REORGANIZAR Con borrado conjunto................');
+
+        const testData = {
+            keysSets: [
+                [
+                    {index: -1, key: 'a2'},
+                    {index: -1, key: 'a3'},
+                    {index: -1, key: 'a3'},
+                    {index: 0, key: 'a3'},
+                    {index: 0, key: 'a2'}
+                ]
+            ],
+            finalExpectedOrder: []
+        };
+
+        lgEvents.on(
+            SourceTypes.CITATION_DOCUMENT,
+            lgTopics.SOURCE_UPDATED,
+            checkCorrespondence.bind(this, done, testData)
+        );
+
+        testData.keysSets[0].forEach(ref => modCitations.put(ref.key, ref.index));
+
+
+        let content = quill.scroll.domNode;
+        let refNodes = $$('.' + SourceBlot.className, content);
+        let firstRef = modCitations.ref(refNodes[0].dataset.id);
+        let thirdRef = modCitations.ref(refNodes[2].dataset.id);
+
+        // console.log('POR BORRAR: \n', content.innerHTML);
+        quill.deleteText(firstRef.index,(thirdRef.index - firstRef.index) + 1);
+        // console.log(content.innerHTML);
+    });
+
 
     function checkCorrespondence(done, testData, type, topic, data) {
         // Chequea que el N° mostrado corresponde con el orden registrado en el DSM.
@@ -493,178 +689,9 @@ describe ('Module operations', () => {
             done(e);
         }
     }
-
-    it('numbers accordingly the citation', done => {
-        // console.log('::::::Numera adecuadamente la cita:::::::::');
-        const key = 'a3';
-
-        lgEvents.on(
-            SourceTypes.CITATION_DOCUMENT,
-            lgTopics.SOURCE_UPDATED,
-            checkCorrespondence.bind(this, done, {key:key})
-        );
-
-        modCitations.put(key);
-    });
-
-    it('increases the citation number', done => {
-        // console.log('......AUMENTAR NUMERACION........');
-
-        const keys = ['a3', 'a4'];
-
-
-        lgEvents.on(
-            SourceTypes.CITATION_DOCUMENT,
-            lgTopics.SOURCE_UPDATED,
-            checkCorrespondence.bind(this, done, {keys:keys})
-        );
-
-        keys.forEach(key => modCitations.put(key));
-
-    });
-
-    it('removes the citation as expected', done => {
-
-        const key = 'a3';
-
-        lgEvents.on(
-            SourceTypes.CITATION_DOCUMENT,
-            lgTopics.SOURCE_REFERENCE_REMOVED,
-            checkSourceLength.bind(this, done, {key:key})
-        );
-
-        modCitations.put(key);
-        modCitations.put(key);
-        // console.log(Citations.source(key).length);
-        // console.log(Citations.source(key).list);
-
-        let ref = modCitations.source(key).getByJ(1);
-        // console.log(quill.scroll.domNode.innerHTML);
-        quill.deleteText(ref.index, 1);
-        // console.log(quill.scroll.domNode.innerHTML);
-        // console.log(Citations.source(key).length);
-        // console.log(Citations.source(key).list);
-    });
-
-    it('reorders the numeration', done => {
-        // console.log('......REORGANIZAR NUMERACIÓN................');
-
-        const testData = {
-            keysSets: [
-                [
-                    {index: -1, key: 'a2'},
-                    {index: -1, key: 'a3'},
-                    {index: 0, key: 'a3'}
-                ],
-                [
-                    {index: 0, key: 'a2'}
-                ]
-            ],
-            finalExpectedOrder: [
-                {key: 'a2', n: 1},
-                {key: 'a3', n: 2},
-                {key: 'a2', n: 1},
-                {key: 'a3', n: 2},
-            ]
-        };
-
-
-        lgEvents.on(
-            SourceTypes.CITATION_DOCUMENT,
-            lgTopics.SOURCE_UPDATED,
-            checkCorrespondence.bind(this, done, testData)
-        );
-
-        testData.keysSets[0].forEach(ref => modCitations.put(ref.key, ref.index));
-
-        lgEvents.on(
-            SourceTypes.CITATION_DOCUMENT,
-            lgTopics.SOURCE_UPDATED,
-            checkExpectedOrder.bind(this, done, testData)
-        );
-
-        let lastRef = testData.keysSets[1][0];
-        modCitations.put(lastRef.key, lastRef.index);
-
-    });
-
-    it('reorders the numeration on delete', done => {
-        // console.log('......REORGANIZAR NUMERACIÓN................');
-
-        const testData = {
-            keysSets: [
-                [
-                    {index: -1, key: 'a2'},
-                    {index: -1, key: 'a3'},
-                    {index: 0, key: 'a3'},
-                    {index: 0, key: 'a2'}
-                ]
-            ],
-            finalExpectedOrder: [
-                // {key: 'a2', n: 1},
-                {key: 'a3', n: 1},
-                {key: 'a2', n: 2},
-                {key: 'a3', n: 1},
-            ]
-        };
-
-
-        lgEvents.on(
-            SourceTypes.CITATION_DOCUMENT,
-            lgTopics.SOURCE_UPDATED,
-            checkCorrespondence.bind(this, done, testData)
-        );
-
-        testData.keysSets[0].forEach(ref => modCitations.put(ref.key, ref.index));
-
-        lgEvents.on(
-            SourceTypes.CITATION_DOCUMENT,
-            lgTopics.SOURCE_UPDATED,
-            checkExpectedOrder.bind(this, done, testData)
-        );
-
-        let firstRefNode = $('.' + SourceBlot.className, quill.scroll.domNode);
-        let firstRef = modCitations.ref(firstRefNode.dataset.id);
-        expect(firstRef).toBeInstanceOf(Reference);
-        quill.deleteText(firstRef.index, 1);
-    });
-
-    it('reorders the numeration on masive deletion', done => {
-        // console.log('......REORGANIZAR Con borrado conjunto................');
-
-        const testData = {
-            keysSets: [
-                [
-                    {index: -1, key: 'a2'},
-                    {index: -1, key: 'a3'},
-                    {index: -1, key: 'a3'},
-                    {index: 0, key: 'a3'},
-                    {index: 0, key: 'a2'}
-                ]
-            ],
-            finalExpectedOrder: []
-        };
-
-        lgEvents.on(
-            SourceTypes.CITATION_DOCUMENT,
-            lgTopics.SOURCE_UPDATED,
-            checkCorrespondence.bind(this, done, testData)
-        );
-
-        testData.keysSets[0].forEach(ref => modCitations.put(ref.key, ref.index));
-
-
-        let content = quill.scroll.domNode;
-        let refNodes = $$('.' + SourceBlot.className, content);
-        let firstRef = modCitations.ref(refNodes[0].dataset.id);
-        let thirdRef = modCitations.ref(refNodes[2].dataset.id);
-
-        // console.log('POR BORRAR: \n', content.innerHTML);
-        quill.deleteText(firstRef.index,(thirdRef.index - firstRef.index) + 1);
-        // console.log(content.innerHTML);
-    });
-
 });
+
+
 
 describe('Citations extension', () => {
 
@@ -704,3 +731,4 @@ describe('Citations extension', () => {
 
 
 });
+

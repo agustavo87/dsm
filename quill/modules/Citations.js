@@ -235,6 +235,7 @@ export default class Citations {
 
         this._DSM = new DocumentSourcesModel(this._type);
         this.SList = new SourcesList(this._DSM, this);
+        this.options = {};
         // this.provider = new SourcesProvider(testSources);
         // this._ready = false;
     }
