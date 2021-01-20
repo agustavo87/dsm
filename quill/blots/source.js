@@ -20,7 +20,7 @@ class SourceBlot extends Embed {
      * @returns {external:HTMLElement} the node object.
      */
     static create(source) {
-        const node = super.create();
+        const node = super.create(source);
 
         node.dataset.key = source.key;
         node.dataset.type = source.type;
@@ -43,8 +43,8 @@ class SourceBlot extends Embed {
     }
 
 
-    constructor(node) {
-        super(node);
+    constructor(scroll, node) {
+        super(scroll, node);
         this.mounted = false;
         this.id = ++SourceBlot.lastId;
         node.dataset.id = this.id;

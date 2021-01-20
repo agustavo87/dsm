@@ -1,13 +1,21 @@
+import Quill from 'quill';
 import SourceBlot from '../../../quill/blots/source';
 
 describe('creación de SourceBlot.', () => {
     const key = 'a2';
     const type = 'reference';
+    let container = null;
+    let quill = null;
     let sbNode = {};
     let mySB = {};
     beforeAll(() => {
+        container = document.createElement('div');
+        container.id="quill-contaienr";
+        document.body.append(container);
+        
+        quill = new Quill(container)
         sbNode = SourceBlot.create({key: key, type: type});
-        mySB = new SourceBlot(sbNode);
+        mySB = new SourceBlot(quill.scroll, sbNode);
     });
 
     it('crea nodos con propiedades dataset (key, type) correctamente', () => {
@@ -26,7 +34,7 @@ describe('creación de SourceBlot.', () => {
 
     it('Actualiza la propiedad id de cada blot de forma correcta', () => {
         const sbNode2 = SourceBlot.create({key: key, type: type});
-        const mySB2 = new SourceBlot(sbNode2);
+        const mySB2 = new SourceBlot(quill.scroll, sbNode2);
         expect(mySB.id).toBe(0);
         expect(mySB2.id).toBe(1);
     });

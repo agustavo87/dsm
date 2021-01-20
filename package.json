@@ -15,6 +15,7 @@
     },
     "dependencies": {
         "lodash": "^4.17.19",
+        "parchment": "^2.0.0-dev.2",
         "quill": "github:agustavo87/quill#dist"
     },
     "devDependencies": {
