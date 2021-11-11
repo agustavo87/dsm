@@ -14,15 +14,15 @@
         "test": "jest"
     },
     "dependencies": {
-        "lodash": "^4.17.19",
+        "lodash": "^4.17.21",
         "parchment": "^2.0.0-dev.2",
         "quill": "github:agustavo87/quill#dist"
     },
     "devDependencies": {
-        "@babel/core": "^7.12.3",
-        "@babel/preset-env": "^7.12.1",
-        "@babel/preset-typescript": "^7.12.1",
-        "babel-jest": "^26.6.1",
-        "jest": "^26.6.1"
+        "@babel/core": "^7.16.0",
+        "@babel/preset-env": "^7.16.0",
+        "@babel/preset-typescript": "^7.16.0",
+        "babel-jest": "^26.6.3",
+        "jest": "^26.6.3"
     }
 }
