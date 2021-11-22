@@ -202,6 +202,30 @@ describe('Reference', () => {
             expect(myDSM.sourceByI(i).first).toBe(myRefs[2]); // first:index: 10
         });
 
+        it('calls order change only once when two references of same source added - and the addition is before the \'first\' reference', () => {
+            let mockReorder = jest.fn()
+
+            lgEvents.on(SourceTypes.CITATION_DOCUMENT, lgTopics.SOURCE_ORDER_CHANGE, mockReorder)
+            let myRefs = getRefs([{key: 'a9', indexes: [25, 20]}])
+            myDSM.put(myRefs[0])
+            myDSM.put(myRefs[1])
+
+            expect(mockReorder).toBeCalledTimes(1)
+        })
+
+        it('calls order change when an existing source is added first and changes the order', () => {
+            let mockReorder = jest.fn((type, topic, data) => console.log({type, topic, data}))
+            let myRefs1 = getRefs([{key: 'a5', indexes: [33, 24]}]);
+            let myRefs2 = getRefs([{key: 'a4', indexes: [40, 10]}]);
+
+            myRefs1.forEach(ref => myDSM.put(ref));
+
+            lgEvents.on(SourceTypes.CITATION_DOCUMENT, lgTopics.SOURCE_ORDER_CHANGE, mockReorder)
+            myRefs2.forEach(ref => myDSM.put(ref));
+            expect(mockReorder).toBeCalledTimes(2)
+
+        })
+
         it('Asignación y orden de misma fuente, stress test', () => {
             let myRefs = getRefs([{
                 key: 'a2',
@@ -821,8 +845,3 @@ describe('Reference', () => {
         expect(data.list.length).toBe(3);
     });
 });
-
-
-
-
-

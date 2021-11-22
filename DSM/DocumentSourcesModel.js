@@ -9,9 +9,9 @@ import SourceReferencesModel from "./SourceReferencesModel";
 export default class DocumentSourcesModel {
 
     /**
-     * Construct the Model 
-     * 
-     * @param {SourcesType} type 
+     * Construct the Model
+     *
+     * @param {SourcesType} type
      */
     constructor (type) {
         this.errored = false;
@@ -29,7 +29,7 @@ export default class DocumentSourcesModel {
 
     /**
      * Adds a Reference
-     * 
+     *
      * @param {Reference}
      * @returns {number} Source Index after updateAll.
      */
@@ -44,11 +44,14 @@ export default class DocumentSourcesModel {
         let i = this.sourceIndex(Reference.key);
 
         if (i > -1) {
+           let firstKey = this._sources[0].key
            let isFirst = this._sources[i].put(Reference);
            // i = isFirst ? this._reLocate(i): i;
            if (isFirst) {
                i = this._reLocate(i);
-               lgEvents.emit(this._type, lgTopics.SOURCE_ORDER_CHANGE, {i:i, target:this});
+               if (firstKey != Reference.key) {
+                  lgEvents.emit(this._type, lgTopics.SOURCE_ORDER_CHANGE, {i:i, target:this});
+               }
                lgEvents.emit(this._type, lgTopics.SOURCE_REFERENCE_ADDED_REORDERED, {reference:Reference, i:i, target: this});
            } else {
                lgEvents.emit(this._type, lgTopics.SOURCE_REFERENCE_ADDED, {reference:Reference, i:i, target:this});
@@ -68,8 +71,8 @@ export default class DocumentSourcesModel {
     /**
      * Locate a determined source (model) in certain order in the model
      * of sources, by the index of its first element.
-     * 
-     * @param {SourceReferencesModel} SourceModel 
+     *
+     * @param {SourceReferencesModel} SourceModel
      * @returns {number} i - The order in wich the model was located.
      */
     _locate(SourceModel) {
@@ -89,7 +92,7 @@ export default class DocumentSourcesModel {
 
     /**
      * Relocate some model
-     * 
+     *
      * @param {number} i_SourceModel - index of the model
      * @returns {number} the index of the new (or old location
      */
@@ -104,10 +107,10 @@ export default class DocumentSourcesModel {
         return i_SourceModel;
     }
 
-    
+
     /**
      * Removes a reference
-     * 
+     *
      * @param {Reference} Reference - The reference to be removed
      */
     remove(Reference) {
@@ -116,7 +119,7 @@ export default class DocumentSourcesModel {
 
     /**
      * Removes a reference by its id and or key.
-     * 
+     *
      * @param {number} id - The id of the SourceBlot of the Reference
      * @param {string} key - The key of the source of the reference.
      * @returns {number} The i of the reference, or -1 if error
@@ -172,7 +175,7 @@ export default class DocumentSourcesModel {
 
     /**
      * Get a source by its index.
-     * 
+     *
      * @param {number} i - the index of source
      * @returns {SourceReferencesModel}
      */
@@ -182,7 +185,7 @@ export default class DocumentSourcesModel {
 
     /**
      * Gets a source by its key.
-     * 
+     *
      * @param {string} key - The key of the source
      * @returns {SourceReferencesModel}
      */
@@ -192,7 +195,7 @@ export default class DocumentSourcesModel {
 
     /**
      * Gets a Reference
-     * 
+     *
      * @param {string} key - The key of the reference to get
      * @param {number} id - The id of the SourceBlot of the Reference.
      * @returns {Reference}
@@ -211,8 +214,8 @@ export default class DocumentSourcesModel {
     }
 
     /**
-     * Gets the index of a source.
-     * 
+     * Gets the **y** index of a source.
+     *
      * @param {string} key - The key of the source to gt
      * @returns {number} the index of the source model.
      */
@@ -222,9 +225,9 @@ export default class DocumentSourcesModel {
 
     /**
      * Gets the ReferenceModel of a Reference by its id
-     * 
+     *
      * @param {number} id - The id of the source.
-     * @returns {SourceReferencesModel} 
+     * @returns {SourceReferencesModel}
      */
     referenceSource(id) {
         return  this._sources.find( source => (typeof source.get(id)) !== 'undefined');
