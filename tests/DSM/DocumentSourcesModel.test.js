@@ -214,7 +214,8 @@ describe('Reference', () => {
         })
 
         it('calls order change when an existing source is added first and changes the order', () => {
-            let mockReorder = jest.fn((type, topic, data) => console.log({type, topic, data}))
+            let mockReorder = jest.fn()
+
             let myRefs1 = getRefs([{key: 'a5', indexes: [33, 24]}]);
             let myRefs2 = getRefs([{key: 'a4', indexes: [40, 10]}]);
 

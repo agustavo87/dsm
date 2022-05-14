@@ -2,12 +2,10 @@ import lgEvents, {lgTopics} from '../utils/events'
 import {isValidType} from "./SourceTypes";
 import SourceReferencesModel from "./SourceReferencesModel";
 
-
 /**
  * Model the Sources of certain type of a Quill Document.
  */
 export default class DocumentSourcesModel {
-
     /**
      * Construct the Model
      *
@@ -232,5 +230,4 @@ export default class DocumentSourcesModel {
     referenceSource(id) {
         return  this._sources.find( source => (typeof source.get(id)) !== 'undefined');
     }
-
 }
