@@ -1,17 +1,28 @@
 import minBy from 'lodash/minBy';
 
 /**
- * Model the References in the document (SourceBlots) to a common Source (Key)
+ * Model all `References` with a same `key` (source) in a `Quill` instance (document)
+ * 
+ * - `Refs.key`: Key (source) of the References modeled.
+ * - `Refs.put(Reference)`: Puts a new Reference to be modeled.
+ * - `Refs.first`: Returns the Reference that is positioned first in the document.
+ * - `Refs.list`: Returns a -shallow copy- of the the list of References (unordered).
+ * - `Refs.length`: Returns the length of the list of references.
+ * - `Refs.removebyJ(j)`: Removes a Reference from the the model by its index in the current References model.
+ * - `Refs.getByJ(j)`: Gets a Reference by its index in the current References Model.
+ * - `Refs.get(id)`: Gets a Reference by its SourceBlot `id`.
+ * - `Refs.remove(id)`: Removes a Reference by its SourceBlot `id`.
  */
 export default class SourceReferencesModel {
 
     /**
      * Create the Model of the References of the Source
      * @param {string} key representing the source
+     * @throws When no key provided
      */
     constructor (key) {
         if (!key) {
-            throw new Error('Debe suministrarse una clave de construcción')
+            throw new Error('No source Key provided')
         }
         this._key = String(key);
         this._references = [];
@@ -68,8 +79,7 @@ export default class SourceReferencesModel {
     get length() {return this._references.length}
 
     /**
-     * Removes a Reference by its j index (it index in the list of References
-     * of the same source in this model)
+     * Removes a Reference by its `j` index (it index in the list of References)
      * 
      * @param {number} j
      * @returns {boolean} true if first.
@@ -89,11 +99,11 @@ export default class SourceReferencesModel {
      * 
      * @param {number} j index in the References list in this model.
      * @returns {Reference} 
-     * @throws {Error}
+     * @throws {Error} When no j index provided
      */
     getByJ(j) {
         if (!(typeof j === 'number') || j < 0 || j > (this._references.length - 1)) {
-            throw new Error('índice j es inválido (no es Number, o fuera de rango).')
+            throw new Error('Invalid j index: out of range or not a number.')
         }
        return this._references[j];
     }
@@ -122,7 +132,5 @@ export default class SourceReferencesModel {
         } else {
             return j;
         }
-
     }
-
 }

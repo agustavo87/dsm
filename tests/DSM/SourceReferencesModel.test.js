@@ -26,42 +26,38 @@ const mockStatic = {
     }
 };
 
-test('construir sin key tira error', () => {
+it('Throws error when construed without key', () => {
     expect(() => new SourceReferencesModel()).toThrow();
 });
 
-test('devuevle la key correctamente', () => {
+it('Returns key', () => {
     const myKey = 'a2';
     const mySM = new SourceReferencesModel(myKey);
     expect(mySM.key).toBe(myKey);
 });
 
-it('Devuelve lista sombra',() => {
-
-});
-
-describe('validación de índice j', () => {
+describe('Validation of j index', () => {
     const myKey = 'a2';
     const mySM = new SourceReferencesModel(myKey);
     const myRef = new Reference();
     beforeAll(() => {
         mySM.put(myRef);
     });
-    it('buscar sin un número tira error', () => {
+    it('Throws if j is not a number.', () => {
         expect(() => mySM.getByJ('0')).toThrow();
     });
 
-    it('buscar fuera del índice tira error', () => {
+    it('Throws if j is out of range', () => {
         expect(() => mySM.getByJ(2)).toThrow();
     });
 
-    it('devuelve correctamente referencia', () => {
+    it('Returns Reference if j exists', () => {
         expect(mySM.getByJ(0)).toBe(myRef);
     });
 });
 
 
-it('Reference index mock works', () => {
+test('Reference index mock works', () => {
     Reference.mockClear();
 
     const blotIndexes = [10,5,29];
@@ -79,7 +75,7 @@ it('Reference index mock works', () => {
 
 });
 
-it('Reference id mock works', () => {
+test('Reference id mock works', () => {
     mockStatic.Reference.lastId = -1;
     Reference.mockClear();
 
@@ -90,9 +86,10 @@ it('Reference id mock works', () => {
     expect(myRef2.id).toBe(1);
 });
 
-describe('Asignación de primero', () => {
+describe('Modeling the reference positioned first', () => {
     const myKey = 'a2';
-    let mySM = {};
+    /** @type {SourceReferencesModel} */
+    let mySRRM;
     const Refs = [];
     const blotIndexes = [5, 2, 55, 1];
 
@@ -107,70 +104,74 @@ describe('Asignación de primero', () => {
     });
 
     beforeEach(() => {
-       mySM = new SourceReferencesModel(myKey);
+       mySRRM = new SourceReferencesModel(myKey);
     });
 
-    it('propiedad length correcta', () => {
+    it('Returns correct length', () => {
         Refs.forEach(Ref => {
-            mySM.put(Ref);
+            mySRRM.put(Ref);
         });
-        expect(mySM.length).toBe(Refs.length);
+        expect(mySRRM.length).toBe(Refs.length);
     });
 
-    it('Almacena la referencia más pequeña', () => {
+    it('Returns Referece positioned first in the document', () => {
         Refs.forEach(Ref => {
-            mySM.put(Ref);
+            mySRRM.put(Ref);
         });
-        expect(mySM.first.index).toBe(1);
+        expect(mySRRM.first.index).toBe(1);
+        expect(mySRRM.first).toBe(Refs[3])
     });
 
-    it('Devuelve lista sombra', () => {
+    it('It returns shallow copy of References', () => {
         Refs.forEach(Ref => {
-            mySM.put(Ref);
+            mySRRM.put(Ref);
         });
 
-        const myList = mySM.list;
-        let j1 = myList.length - 1, j2 = mySM.length - 1;
-        expect(myList[j1]).toBe(mySM.getByJ(j2));
+        // It has the same elements
+        const myList = mySRRM.list
+        let j0_a = myList.length - 1
+        let j0_b = mySRRM.length - 1
+        expect(myList[j0_a]).toBe(mySRRM.getByJ(j0_b))
 
+        // But is different a object.
         myList.push(new Reference());
-        j1 = myList.length - 1; j2 = mySM.length - 1;
-        expect(myList[j1]).not.toBe(mySM.getByJ(j2));
-
+        j0_a = myList.length - 1; j0_b = mySRRM.length - 1
+        expect(myList[j0_a]).not.toBe(mySRRM.getByJ(j0_b))
     });
 
-    it('Remover el primero y reestablecer el primero', () => {
+    it('Updates the first Reference when is removed', () => {
         Refs.forEach(Ref => {
-            mySM.put(Ref);
+            mySRRM.put(Ref);
         });
-        expect(mySM.removeByJ(3)).toBe(true);
-        expect(mySM.first).toBe(mySM.getByJ(1));
+        expect(mySRRM.removeByJ(3)).toBe(true);
+        expect(mySRRM.first).toBe(mySRRM.getByJ(1));
     });
 
     it('minBy', () => {
         let objects = [{ 'n': 1 }, { 'n': 2 }];
 
         let result = minBy(objects, function(o) { return o.n; });
-        // => { 'n': 1 }
 
         expect(result).toBe(objects[0]);
     });
 
-    it('obtener por id', () => {
+    it('Returns Reference by its SourceBlot id', () => {
         Refs.forEach(Ref => {
-            mySM.put(Ref);
+            mySRRM.put(Ref);
         });
-        expect(mySM.get(Refs[2].id)).toBe(Refs[2]);
-        expect(mySM.get(Refs[0].id)).toBe(Refs[0]);
+        expect(mySRRM.get(Refs[2].id)).toBe(Refs[2]);
+        expect(mySRRM.get(Refs[0].id)).toBe(Refs[0]);
     });
 
-    it('remover por id', () => {
+    it('Removes References by its id', () => {
         Refs.forEach(Ref => {
-            mySM.put(Ref);
+            mySRRM.put(Ref);
         });
-        expect(mySM.remove(Refs[2].id)).toBe(false);
-        expect(mySM.get(Refs[2].id)).toBeUndefined();
-        expect(mySM.remove(Refs[3].id)).toBe(true); // era un primero.
-        expect(mySM.first.id).toBe(Refs[1].id) // el segundo menor.
+        expect(mySRRM.remove(Refs[2].id)).toBe(false);
+        expect(mySRRM.get(Refs[2].id)).toBeUndefined();
+        // True if removed item is positioned first in document.
+        expect(mySRRM.remove(Refs[3].id)).toBe(true)
+        // The first Reference is updated
+        expect(mySRRM.first.id).toBe(Refs[1].id) 
     })
 });
