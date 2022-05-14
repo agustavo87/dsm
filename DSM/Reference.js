@@ -1,62 +1,75 @@
 import SourceBlot from '../quill/blots/source';
 
 /**
- * A wrapper to handle SourceBlots info.
+ * A wrapper to handle `SourceBlots` info.
+ * - `myRef.key`: Key of the reference
+ * - `myRef.type`: Type of the reference
+ * - `myRef.index`: Index of the blot in the specified quill instance.
+ * - `myRef.id`: Id of the reference
+ * - `myRef.blot`: SourceBlot wrapped
  */
-export default class Reference {
-
+class Reference {
     /**
      * Creates Reference from SourceBlot.
      * 
      * @param {SourceBlot} blot
-     * @param {Quill} quill instance. It's recomended specify on construction
+     * @param {Quill} quill instance to get index from. It's recomended specify on construction.
+     * @throws Will trhow error if quill is not inyected in the class or passed as argument.
      */
-    constructor (blot = false, quill = false) {
+    constructor (blot = false, quill = null) {
         if (!(blot instanceof SourceBlot)) {
-            throw new Error('El blot suministrado no es un SourceBlot válido')
+            throw new Error('No valid SourceBlot.')
         }
-        if(quill) { // se recomienda siempre especificar la referencia a quill.
-            this.quill = quill;
-        } else if (Reference.quill) { // Por defecto
-            // no se recomienda, debido a que si hay multiples instancias de quill en
-            // un mismo proceso de ejecución, van reemplazarse.
-
-            /**
-             * @todo arrojaría error porque Reference puede ser 'null' (como lo es),
-             *  debería chequearse que Reference.quill sea válida.
-             */
-
-            this.quill = Reference.quill;
-        } else {
-            throw new Error('No se inyectado referencia a instancia de Quill');
+        if(!quill && !Reference.quill) { // se recomienda siempre especificar la referencia a quill.
+            throw new Error('No valid quill instance available.');
         }
 
-        this.quill = quill ? quill : Reference.quill;
+        this.quill = quill ?? Reference.quill;
         this._blot = blot;
     }
 
+    /**
+     * Index of the blot in the specified quill instance
+     * @returns {number}
+     */
     get index() {
-        // if (this.quill === null) {
-        //     throw new Error('No se inyectado referencia a instancia de Quill');
-        // }
         return this.quill.getIndex(this._blot);
     }
 
+    /**
+     * Wrapped blot 
+     * @returns {SourceBlot}
+     */
     get blot() {
         return this._blot;
     }
 
+    /** 
+     * Key of the Reference 
+     * @returns {string}
+     */
     get key() {
         return this._blot.domNode.dataset.key;
     }
 
+    /** 
+     * Type of the Reference 
+     * @returns {string}
+     */
     get type() {
         return this._blot.domNode.dataset.type;
     }
 
+    /** 
+     * The id of the Reference
+     * @returns {number} 
+    */
     get id() {
         return this._blot.id;
     }
 }
+
 /** Default quill instance */
 Reference.quill = null;
+
+export default Reference;
