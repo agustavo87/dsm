@@ -1,15 +1,16 @@
 import lgEvents, {lgTopics} from '../utils/events'
-import {isValidType} from "./SourceTypes";
+import {isValidType, SourceTypes} from "./SourceTypes";
 import SourceReferencesModel from "./SourceReferencesModel";
 
 /**
  * Model the Sources of certain type of a Quill Document.
+ * @property {SourceReferencesModel[]} _sources
  */
 export default class DocumentSourcesModel {
     /**
      * Construct the Model
      *
-     * @param {SourcesType} type
+     * @param {SourceTypes} type
      */
     constructor (type) {
         this.errored = false;
@@ -17,7 +18,7 @@ export default class DocumentSourcesModel {
 
         if (!isValidType(type)) {
             this.errored = true;
-            this.error = new Error('Tipo inválido');
+            this.error = new Error('Invalid type');
             lgEvents.emit('',lgTopics.ERROR, {error: this.error});
             return;
         }
@@ -29,29 +30,43 @@ export default class DocumentSourcesModel {
      * Adds a Reference
      *
      * @param {Reference}
-     * @returns {number} Source Index after updateAll.
+     * @returns {number} Source index after updateAll.
      */
     put(Reference) {
-        if(!(Reference.type === this._type)) {
+        if(Reference.type != this._type) {
             lgEvents.emit(this._type, lgTopics.ERROR, {
-                error: new Error('Se trató de asignar tipo equivocado de referencia. \n ' +
-                    'Referencia tipo: ' + Reference.type + ', id:'+ Reference.id + ', DocumentSourceModel tipo: ' + this._type )
+                error: new Error('Try to put wrong type of Reference \n ' +
+                    'Type: ' + Reference.type + ', id:'+ Reference.id + ', DocumentSourceModel type: ' + this._type )
             });
             return -1;
         }
+        // is registered?
         let i = this.sourceIndex(Reference.key);
 
+        // yes, with this index
         if (i > -1) {
-           let firstKey = this._sources[0].key
-           let isFirst = this._sources[i].put(Reference);
-           // i = isFirst ? this._reLocate(i): i;
-           if (isFirst) {
+           let firstSourceKey = this._sources[0].key
+           let isFirstReferenceOfSameSource = this._sources[i].put(Reference);
+           // i = isFirstReferenceOfSameSource ? this._reLocate(i): i;
+           if (isFirstReferenceOfSameSource) {
                i = this._reLocate(i);
-               if (firstKey != Reference.key) {
+
+              
+               /** 
+                * @todo THIS DON'T SEEM TO BE COMPLETELY VALID
+                * The reference could be not be the first of the document, and be
+                * before the previous first of the same source, but without 
+                * change the order relative to other sources.
+                */
+                // The reorderings will be emited unless is the first reference.
+               if (firstSourceKey != Reference.key) {
                   lgEvents.emit(this._type, lgTopics.SOURCE_ORDER_CHANGE, {i:i, target:this});
                }
+               
+               /** @todo this also don't seem to be completely valid */
                lgEvents.emit(this._type, lgTopics.SOURCE_REFERENCE_ADDED_REORDERED, {reference:Reference, i:i, target: this});
            } else {
+               
                lgEvents.emit(this._type, lgTopics.SOURCE_REFERENCE_ADDED, {reference:Reference, i:i, target:this});
            }
         } else {
@@ -64,7 +79,6 @@ export default class DocumentSourcesModel {
 
         return i;
     }
-
 
     /**
      * Locate a determined source (model) in certain order in the model
@@ -92,7 +106,7 @@ export default class DocumentSourcesModel {
      * Relocate some model
      *
      * @param {number} i_SourceModel - index of the model
-     * @returns {number} the index of the new (or old location
+     * @returns {number} the index of the new (or old location)
      */
     _reLocate(i_SourceModel) {
 
@@ -104,7 +118,6 @@ export default class DocumentSourcesModel {
 
         return i_SourceModel;
     }
-
 
     /**
      * Removes a reference
@@ -127,13 +140,13 @@ export default class DocumentSourcesModel {
         if (!key) {
             key = this.referenceSource(id).key;
             if (!key) {
-                throw new Error('No se ha encontrado un fuente con ese id')
+                throw new Error('No source with specified id: ' + id)
             }
         }
         let i = this.sourceIndex(key);
         if (i < 0) {
             lgEvents.emit(this._type, lgTopics.ERROR, {
-                error: new Error('Se buscó una clave de fuente inexistente: ' + key)
+                error: new Error('Inexistent Source Key: ' + key)
             });
             return -1;
         }
@@ -141,13 +154,13 @@ export default class DocumentSourcesModel {
         let wasFirst = this._sources[i].remove(id);
         if (wasFirst === -1) {
             lgEvents.emit(this._type, lgTopics.ERROR, {
-                error: new Error('Se buscó un id de Referencia inexistente: ' + id)
+                error: new Error('Inexistent Reference id: ' + id)
             });
             return -1;
         } else if (wasFirst) {
             if (this._sources[i].length) {
                 let former_i = i;
-                i = this._reLocate(i);
+            i = this._reLocate(i);
                 lgEvents.emit(this._type, lgTopics.SOURCE_ORDER_CHANGE, {i: former_i, target:this});
             } else {
                 this._sources.splice(i, 1);

@@ -6,9 +6,14 @@ import DocumentSourcesModel from './DocumentSourcesModel';
  * Just presents a list of the sources of a DocumentSourcesModel.
  */
 export default class SourcesList {
-    constructor(DSM, shadow = false) {
+
+    /**
+     * @param {DocumentSourcesModel} DSM 
+     * @param {object} [shadow]
+     */
+    constructor(DSM, shadow) {
         if (!(DSM instanceof DocumentSourcesModel)) {
-            throw new Error('Document Sources Model inválido: ' + DSM);
+            throw new Error(`Invalid Document Sources Model: ${DSM}`);
         }
 
         this._list = [];
@@ -30,18 +35,10 @@ export default class SourcesList {
         if (dif) {
             this._list.splice(this._list.length - dif, dif);
         }
-
     }
 
     _update() {
-        // if (this._shadow) {
-            /** @todo me parece que aquí habría que simplemente agregar la lista entera.
-             *  this._shadow.list = this.list; 
-             *  debido al manejo de vue de los arrays y los objetos.
-             */
-            this._shadow.list.splice(0);
-            this.list.forEach(key => this._shadow.list.push(key))
-        // }
+        this._shadow.list = this.list
     }
 
     i(i) {
@@ -59,7 +56,6 @@ export default class SourcesList {
     }
 
     SourcesObserver(type, topic, data) {
-        // console.log('observando',type, data, topic);
         this._loadDSMSoruces(data.i);
         this._update();
     }

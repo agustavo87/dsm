@@ -5,9 +5,9 @@
         "jsx": "preserve"
     },
     "include": [
-        "DSM/**/*",
-        "quill/**/*",
-        "tests/**/*",
-        "utils/**/*"
+        "DSM/**/*.js",
+        "quill/**/*.js",
+        "tests/**/*.js",
+        "utils/**/*.js"
     ]
 }

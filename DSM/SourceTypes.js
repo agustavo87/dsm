@@ -1,12 +1,6 @@
 /**
- * A type of source of DSM
- * @typedef {string} SourceTypes
- */
-
-/**
  * Types of Sources of DSM
- * @readonly
- * @enum {SourcesTypes} SourceTypes
+ * @enum {string} SourceTypes
  */
 const SourceTypes = {
     CITATION_DOCUMENT: 'citation-document'
@@ -14,7 +8,7 @@ const SourceTypes = {
 
 /**
  * Determine if the type is valid type of DSM
- * @param {SourcesTypes} type Test
+ * @param {SourceTypes} type Test
  */
 function isValidType(type) {
     return (Object.values(SourceTypes).indexOf(type) > -1);

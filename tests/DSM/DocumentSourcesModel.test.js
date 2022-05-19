@@ -8,19 +8,20 @@ import SourcesList from "../../DSM/SourcesList";
 
 jest.mock('../../quill/blots/source');
 
-// Pasar esto a un manual mock
+// For mocking References without depending on DOM or Quill Blots.
 jest.mock('../../DSM/Reference', function () {
     const modules = {
         __esModule: true,
-        default: jest.fn(function (options) {
-            const properties = {
+        default: jest.fn(function (properties) {
+
+            properties = {
                 blot: {},
                 key: 'a4',
                 type: 'citation-document',
-                index: 12
-            };
-
-            Object.assign(properties, options);
+                index: 12,
+                ...properties
+            }
+            
             const Ref = {};
 
             Ref._id = ++mockStatic.Reference.lastId;
@@ -47,13 +48,12 @@ jest.mock('../../DSM/Reference', function () {
             return Ref;
         }),
     };
-    modules.default.lastId = -1;
     return modules;
 });
 
-// observador particular
-const mensajes = {
-    guardar: jest.fn(
+// Particular observer
+const messages = {
+    save: jest.fn(
         function (type, topic, data) {
             this._msjs.push(
                 {
@@ -76,18 +76,18 @@ const mockStatic = {
     }
 };
 
-test('DocumentSourcesModel construido sin opcciones notifica error, sin suspender ejecución', () => {
+test('Construing DocumentSourcesModel without options notify error without interrupting execution', () => {
     const mySM = new DocumentSourcesModel();
     expect(mySM.errored).toBe(true);
     expect(mySM.error).toBeInstanceOf(Error);
 });
 
 test('DocumentSourcesModel emite evento de error', () => {
-    lgEvents.on('', lgTopics.ERROR, mensajes.guardar.bind(mensajes));
+    lgEvents.on('', lgTopics.ERROR, messages.save.bind(messages));
     const mySM = new DocumentSourcesModel();
 
-    expect(mensajes.guardar).toBeCalled();
-    expect(mensajes._msjs[0]).toMatchObject({
+    expect(messages.save).toBeCalled();
+    expect(messages._msjs[0]).toMatchObject({
         type: '',
         topic: lgTopics.ERROR,
         data: {
@@ -96,49 +96,68 @@ test('DocumentSourcesModel emite evento de error', () => {
     })
 });
 
-function getRefs(data) {
-    let myRefs = [];
-    data.forEach(source => {
-        source.indexes.forEach(index => {
-            myRefs.push({
-                key: source.key,
+/**
+ * Data for create an array of mock Reference objects
+ * 
+ * @typedef {Object} RefData
+ * @property {string} key - The key of the soure
+ * @property {number[]} indexes - The indexes of the references
+ */
+
+/**
+ * Generates an array of Reference objects from supplied data
+ * 
+ * @param {RefData[]} refData 
+ * @returns {Reference[]}
+ */
+function getRefs(refData) {
+    let ReferencesOptions = [];
+
+    refData.forEach(params => {
+        params.indexes.forEach(index => {
+            ReferencesOptions.push({
+                key: params.key,
                 index: index
             })
         })
     });
-    myRefs = myRefs.map(refOptions => new Reference(refOptions));
-    return myRefs;
+
+    return ReferencesOptions.map(opts => new Reference(opts));
 }
 
+// This may be the data of a view.
+// Created for mocking and checking.
 const data = {
     _list: []
-}; // this may be the data of a view
+};
+
 const mockGet = jest.fn(function () {
     return this._list;
 });
+
 const mockSet = jest.fn(function (value) {
     this._list = value;
-    // console.log('list updated:', this._list)
 });
+
 Object.defineProperty(data, 'list', {
     set: mockSet,
     get: mockGet
 });
 
 describe('Reference', () => {
-    let myDSM = null;
-    lgEvents.onAny(mensajes.guardar, mensajes);
+    /** @type {DocumentSourcesModel} */
+    let myDSM;
+    lgEvents.onAny(messages.save, messages);
 
     beforeEach(() => {
         myDSM = new DocumentSourcesModel(SourceTypes.CITATION_DOCUMENT);
-        mensajes.clear();
-        mensajes.guardar.mockClear();
+        messages.clear();
+        messages.save.mockClear();
         Reference.mockClear();
         mockStatic.Reference.lastId = -1;
         mockSet.mockClear();
         mockGet.mockClear();
         data._list = [];
-
     });
 
     afterEach(() => {
@@ -146,30 +165,29 @@ describe('Reference', () => {
         lgEvents.clear(myDSM.type, lgTopics.SOURCE_REFERENCE_REMOVED);
         lgEvents.clear(myDSM.type, lgTopics.SOURCE_REFERENCE_ADDED_REORDERED);
         lgEvents.clear(myDSM.type, lgTopics.SOURCE_REFERENCE_ADDED);
-
-
     });
 
-    describe('asignación y orden', () => {
+    describe('Order and assignament', () => {
 
-        it('Da error al asignar tipo incorrecto de referencia', () => {
-
-            const myRef = new Reference({type: 'tipo.inexistente'});
+        it('Throws error if inserting other Reference type', () => {
+            const myRef = new Reference({type: 'inexistent.type'});
             expect(myDSM.put(myRef)).toBeLessThan(0);
-            expect(mensajes.guardar).toBeCalled();
-            // console.log('Mensaje al asignar tipo incorrecto de referencia', mensajes._msjs[0]);
+            expect(messages.save).toHaveBeenCalledWith(
+                SourceTypes.CITATION_DOCUMENT,
+                lgTopics.ERROR,
+                expect.objectContaining({
+                    error: expect.any(Error)
+                })
+            );
         });
 
-        it('Asignación inicial de Referencia', () => {
+        it('Initial assignament to Reference', () => {
             const myRef = new Reference();
             let i = myDSM.put(myRef);
             expect(i).toBe(0);
-            expect(
-                Object.getOwnPropertyDescriptor(myRef, 'index').get
-            ).toBeCalled();
         });
 
-        it('Asignación de Referencia. Testeo de eventos.', () => {
+        it('Call expected events on assignment.', () => {
             const myRef = new Reference();
             lgEvents.on(myDSM.type, lgTopics.SOURCE_REFERENCE_ADDED_REORDERED, (type, topic, data) => {
                 expect(data.reference).toBe(myRef);
@@ -189,7 +207,7 @@ describe('Reference', () => {
 
         });
 
-        it('En misma referencia pone como primera a la de indice menor.', () => {
+        it('In the same reference puts first the one with less index.', () => {
             let myRefs = getRefs([{key: 'a9', indexes: [20, 25, 10]}]);
 
             let i = myDSM.put(myRefs[0]); // index:20
@@ -202,6 +220,7 @@ describe('Reference', () => {
             expect(myDSM.sourceByI(i).first).toBe(myRefs[2]); // first:index: 10
         });
 
+        /** @todo change this Event don't seem to have sense. */
         it('calls order change only once when two references of same source added - and the addition is before the \'first\' reference', () => {
             let mockReorder = jest.fn()
 
@@ -224,10 +243,9 @@ describe('Reference', () => {
             lgEvents.on(SourceTypes.CITATION_DOCUMENT, lgTopics.SOURCE_ORDER_CHANGE, mockReorder)
             myRefs2.forEach(ref => myDSM.put(ref));
             expect(mockReorder).toBeCalledTimes(2)
-
         })
 
-        it('Asignación y orden de misma fuente, stress test', () => {
+        it('Assignment and order of the same source, stress test', () => {
             let myRefs = getRefs([{
                 key: 'a2',
                 indexes: [50, 555, 23, 28, 56, 93, 32, 15, 25, 99, 4, 484, 5518, 88, 61, 129, 22, 12, 13, 14, 8]
@@ -237,13 +255,12 @@ describe('Reference', () => {
             let i = null;
             myRefs.forEach(ref => {
                 i = myDSM.put(ref);
-                expect(i).toBe(0);  // todas son del mismo tipo por lo que todas deberían
-                                    // ser 0.
+                expect(i).toBe(0);  // All are of the same type so all should be 0.
             });
             expect(myDSM.sourceByI(i).first).toBe(myRefs[i_min]);
         });
 
-        it('Orden de Referencias de distintas fuentes', () => {
+        it('Order of References of different sources', () => {
             let myRefs = getRefs([
                 {key: 'a5', indexes: [33, 24]},
                 {key: 'a4', indexes: [40, 10, 33]}
@@ -251,16 +268,16 @@ describe('Reference', () => {
 
             myRefs.forEach(ref => myDSM.put(ref));
             expect(myDSM.sourceByI(0).key).toBe(myRefs[2].key); // a4
-            // console.log(myDSM.sourceByI(0).key);
+
             expect(myDSM.sourceByI(0).first).toBe(myRefs[3]); // index:10
-            // console.log(myDSM.sourceByI(0).first.index);
+
             expect(myDSM.sourceByI(1).key).toBe(myRefs[0].key); // a5
-            // console.log(myDSM.sourceByI(1).key);
+
             expect(myDSM.sourceByI(1).first).toBe(myRefs[1]); // a5, index:24
-            // console.log(myDSM.sourceByI(1).first.index);
+
         });
 
-        it('orden distitnas fuentes, stress', () => {
+        it('Order of different sources, stress', () => {
             let data = [
                 {key: 'b9', indexes: [441, 44, 12, 58, 123, 12, 93, 45]},
                 {key: 'j4', indexes: [448, 92, 68, 33, 41, 87, 85, 25]},
@@ -270,8 +287,6 @@ describe('Reference', () => {
             let myRefs = getRefs(data);
 
             const i_minRef = myRefs.indexOf(minBy(myRefs, 'index'));
-            // console.log(`min: { key: ${myRefs[i_minRef].key}, index: ${myRefs[i_minRef].index}}`);
-            //{ key: 'b44', index: 11 }
 
             myRefs.forEach(ref => myDSM.put(ref));
 
@@ -279,7 +294,7 @@ describe('Reference', () => {
             expect(myDSM.sourceByI(0).first).toBe(myRefs[i_minRef]);
         });
 
-        it('Mock Referencia con id adecuado', () => {
+        it('Reference mocks have working id property', () => {
             const key = 'a3';
             const myRef = new Reference({key: key});
             const myRef2 = new Reference({key: key});
@@ -287,27 +302,27 @@ describe('Reference', () => {
             expect(myRef2.id).toBe(1);
         });
 
-        it('Obtener referencia por id', () => {
+        it('Get References by its id', () => {
             let key = 'a2';
             const myRef = new Reference({key: key});
             myDSM.put(myRef);
 
             expect(myDSM.reference(myRef.key, myRef.id)).toBe(myRef);
-            expect(mensajes.guardar).not.toBeCalledWith(
+            expect(messages.save).not.toBeCalledWith(
                 SourceTypes.CITATION_DOCUMENT,
                 lgTopics.ERROR,
                 expect.objectContaining({
                     error: expect.any(Error)
                 }));
             expect(myDSM.reference(myRef.key, 5)).toBe(false);
-            expect(mensajes.guardar).not.toBeCalledWith(
+            expect(messages.save).not.toBeCalledWith(
                 SourceTypes.CITATION_DOCUMENT,
                 lgTopics.ERROR,
                 expect.objectContaining({
                     error: expect.any(Error)
                 }));
             expect(myDSM.reference('s3', 3)).toBe(false);
-            expect(mensajes.guardar).toBeCalledWith(
+            expect(messages.save).toBeCalledWith(
                 SourceTypes.CITATION_DOCUMENT,
                 lgTopics.ERROR,
                 expect.objectContaining({
@@ -315,31 +330,31 @@ describe('Reference', () => {
                 }));
         });
 
-        it('Remover referencia. clave inexistente tira error', () => {
+        // it('Remover referencia. clave inexistente tira error', () => {
+        it('Remove Reference. Inexistent key throws error.', () => {
             let key = 'a2';
             const myRef = new Reference({key: key});
             myDSM.put(myRef);
             expect(
                 myDSM.removeReference(myRef.id, 'a3')
             ).toBe(-1);
-            expect(mensajes.guardar).toBeCalledWith(
+            expect(messages.save).toBeCalledWith(
                 SourceTypes.CITATION_DOCUMENT,
                 lgTopics.ERROR,
                 expect.objectContaining({
                     error: expect.any(Error)
                 })
             );
-
         });
 
-        it('Remover referencia. id inexistente tira error', () => {
+        it('Remove Reference. Inexistent id throws error.', () => {
             let key = 'a2';
             const myRef = new Reference({key: key});
             myDSM.put(myRef);
             expect(
                 myDSM.removeReference(1, myRef.key)
             ).toBe(-1);
-            expect(mensajes.guardar).toBeCalledWith(
+            expect(messages.save).toBeCalledWith(
                 SourceTypes.CITATION_DOCUMENT,
                 lgTopics.ERROR,
                 expect.objectContaining({
@@ -348,31 +363,32 @@ describe('Reference', () => {
             );
         });
 
-        it('Remover referencia. Solo con el id', () => {
+        // it('Remover referencia. Solo con el id', () => {
+        it('Remove Reference. Only with id', () => {
             let key = 'a2';
-            const myRef = new Reference({key: key});
+            const myRef = new Reference({key});
             myDSM.put(myRef);
             let sBlot_id = myRef.id; // puede ocurrir que solo se tenga el blot, y al ID desde allí
-            myDSM.removeReference(sBlot_id); //
+            myDSM.removeReference(sBlot_id); 
             expect(myDSM.length).toBe(0);
         });
 
-        it('Remover referencia. Testeo de eventos', () => {
+        it('Remove Refernce. Testing events', () => {
             let key = 'a2';
-            const myRef = new Reference({key: key});
+            const myRef = new Reference({key});
             myDSM.put(myRef);
-            let sBlot_id = myRef.id; // puede ocurrir que solo se tenga el blot, y al ID desde allí
+            
             lgEvents.on(myDSM.type, lgTopics.SOURCE_REFERENCE_REMOVED, (type, topic, data) => {
                 expect(data.reference).toBe(myRef);
                 expect(data.i).toBe(0);
                 expect(data.first).toBe(true);
                 expect(data.target).toBe(myDSM);
             });
-            myDSM.removeReference(sBlot_id); //
+            myDSM.removeReference(myRef.id); 
             expect(myDSM.length).toBe(0);
         });
 
-        it('Remover referencia. secundaria', () => {
+        it('Remove Refernce. Secondary.', () => {
             let myRefs = getRefs([
                 {key: 'a2', indexes: [10, 11]}
             ]);
@@ -383,10 +399,9 @@ describe('Reference', () => {
 
             expect(myDSM.removeReference(myRefs[1].id, myRefs[1].key)).toEqual(expect.any(Number));
             expect(myDSM.source(myRefs[0].key).length).toBe(1);
-
         });
 
-        it('Remover referencia. primera, con fuentes restantes', () => {
+        it('Remove Reference. First, with remaining references', () => {
             let myRefs = getRefs([
                 {key: 'a2', indexes: [10, 11]}
             ]);
@@ -396,12 +411,13 @@ describe('Reference', () => {
             });
 
             let result = myDSM.removeReference(myRefs[0].id, myRefs[0].key,);
-            expect(result).not.toBe(true);
+
             expect(result).toEqual(expect.any(Number));
             expect(myDSM.source(myRefs[0].key).length).toBe(1);
+            expect(myDSM.source('a2').first).toBe(myRefs[1])
         });
 
-        it('Remover referencia. primera, sin fuentes restantes', () => {
+        it('Remove Reference. First, without remaining source', () => {
             let myRefs = getRefs([
                 {key: 'a2', indexes: [10]},
                 {key: 'b2', indexes: [12, 13]}
@@ -411,94 +427,92 @@ describe('Reference', () => {
                 myDSM.put(ref);
             });
 
-            let result = myDSM.removeReference(myRefs[0].id, myRefs[0].key);
+            let result = myDSM.removeReference(myRefs[0].id);
             expect(result).toEqual(expect.any(Number));
-            expect(myDSM.source(myRefs[0].key)).toBeUndefined();
+            expect(myDSM.source('a2')).toBeUndefined();
+            expect(myDSM.sourceByI(0).key).toBe('b2')
         });
 
-        it('Manejo de orden de fuentes-referencias: test 1', () => {
-            let inputData = [
+        it('Management of Sources-References: test 1', () => {
+            let ReferncesScenario = [
                 {
                     key: 'a2',
-                    indexes: [
-                        5, // id: 0
-                        12, // 1
-                        15 // 2
+                    indexes: [  // Reference ID
+                        5,      // 0
+                        12,     // 1
+                        15      // 2
                     ]
                 }, {
                     key: 'a3',
                     indexes: [
-                        3, // 3
-                        19, // 4
-                        25 // 5
+                        3,      // 3
+                        19,     // 4
+                        25      // 5
                     ]
                 }, {
                     key: 'b3',
                     indexes: [
-                        6, // 6
-                        90 // 7
+                        6,      // 6
+                        90      // 7
                     ]
                 }
             ];
 
-            let myRefs = getRefs(inputData);
+            let myRefs = getRefs(ReferncesScenario);
 
             myRefs.forEach(ref => myDSM.put(ref));
 
-            expect(myDSM.sourceIndex(inputData[0].key)).toBe(1);
-            expect(myDSM.sourceIndex(inputData[1].key)).toBe(0);
-            expect(myDSM.sourceIndex(inputData[2].key)).toBe(2);
+            expect(myDSM.sourceIndex('a2')).toBe(1);
+            expect(myDSM.sourceIndex('a3')).toBe(0);
+            expect(myDSM.sourceIndex('b3')).toBe(2);
         });
 
-
-        it('Manejo de orden de fuentes-referencias: test 2', () => {
-            let inputData = [
+        it('Management of order of Sources-References: test 2', () => {
+            let ReferencesScenario = [
                 {
                     key: 'a2',
-                    indexes: [
-                        5, // id: 0
-                        12, // 1
-                        15 // 2
+                    indexes: [  // Reference ID
+                        5,      // 0
+                        12,     // 1
+                        15      // 2
                     ]
                 }, {
                     key: 'a3',
                     indexes: [
-                        3, // 3
-                        19, // 4
-                        25 // 5
+                        3,      // 3
+                        19,     // 4
+                        25      // 5
                     ]
                 }, {
                     key: 'b3',
                     indexes: [
-                        6, // 6
-                        90 // 7
+                        6,      // 6
+                        90      // 7
                     ]
                 }
             ];
 
 
-            let myRefs = getRefs(inputData);
+            let myRefs = getRefs(ReferencesScenario);
 
             myRefs.forEach(ref => myDSM.put(ref));
 
-            expect(myDSM.sourceIndex(inputData[0].key)).toBe(1);
-            expect(myDSM.sourceIndex(inputData[1].key)).toBe(0);
-            expect(myDSM.sourceIndex(inputData[2].key)).toBe(2)
+            expect(myDSM.sourceIndex('a2')).toBe(1);
+            expect(myDSM.sourceIndex('a3')).toBe(0);
+            expect(myDSM.sourceIndex('b3')).toBe(2)
 
-            mensajes.clear();
-            mensajes.guardar.mockClear();
+            messages.clear();
+            messages.save.mockClear();
 
-            expect(mensajes.guardar).not.toBeCalled();
+            expect(messages.save).not.toBeCalled();
 
 
-            let ops = [
-                {method: 'removeReference', args: {id: 3, key: inputData[1].key}},
-                {method: 'removeReference', args: {id: 0, key: inputData[0].key}},
-            ];
+            [
+                {method: 'removeReference', args: [3, 'a3']},
+                {method: 'removeReference', args: [0, 'a2']},
+            ].forEach(op => myDSM[op.method](...op.args));
 
-            ops.forEach(op => myDSM[op.method](...Object.values(op.args)));
-
-            expect(mensajes.guardar).toBeCalledWith(
+            expect(messages.save).toBeCalledWith(
                 SourceTypes.CITATION_DOCUMENT,
                 lgTopics.SOURCE_ORDER_CHANGE,
                 expect.objectContaining({
@@ -506,123 +520,62 @@ describe('Reference', () => {
                 })
             );
 
-            // let expectedData = [
-            //     { // order: 1
-            //         key: 'a2',
-            //         indexes: [
-            //             12, // 1
-            //             15 // 2
-            //         ]
-            //     }, { // 2
-            //         key: 'a3',
-            //         indexes: [
-            //             19, // 4
-            //             25 // 5
-            //         ]
-            //     }, { // 0
-            //         key: 'b3',
-            //         indexes: [
-            //             6, // 6
-            //             90 // 7
-            //         ]
-            //     }
-            // ];
-
-            expect(myDSM.sourceIndex(inputData[0].key)).toBe(1);
-            expect(myDSM.sourceIndex(inputData[1].key)).toBe(2);
-            expect(myDSM.sourceIndex(inputData[2].key)).toBe(0);
-
+            expect(myDSM.sourceIndex('a2')).toBe(1);
+            expect(myDSM.sourceIndex('a3')).toBe(2);
+            expect(myDSM.sourceIndex('b3')).toBe(0);
         });
 
-        it('Manejo de orden de fuentes-referencias: test 3', () => {
-            let inputData = [
+        it('Management of Sources-References: test 3', () => {
+            let ReferencesScenario = [
                 {
                     key: 'a2',
-                    indexes: [
-                        5, // id: 0
-                        12, // 1
-                        15 // 2
+                    indexes: [  // Reference ID
+                        5,      // 0
+                        12,     // 1
+                        15      // 2
                     ]
                 }, {
                     key: 'a3',
                     indexes: [
-                        3, // 3
-                        19, // 4
-                        25 // 5
+                        3,      // 3
+                        19,     // 4
+                        25      // 5
                     ]
                 }, {
                     key: 'b3',
                     indexes: [
-                        6, // 6
-                        90 // 7
+                        6,      // 6
+                        90      // 7
                     ]
                 }
             ];
 
-            let myRefs = getRefs(inputData);
+            let myRefs = getRefs(ReferencesScenario);
 
             myRefs.forEach(ref => myDSM.put(ref));
 
-            expect(myDSM.sourceIndex(inputData[0].key)).toBe(1);
-            expect(myDSM.sourceIndex(inputData[1].key)).toBe(0);
-            expect(myDSM.sourceIndex(inputData[2].key)).toBe(2);
+            expect(myDSM.sourceIndex('a2')).toBe(1);
+            expect(myDSM.sourceIndex('a3')).toBe(0);
+            expect(myDSM.sourceIndex('b3')).toBe(2);
 
-            mensajes.clear();
-            mensajes.guardar.mockClear();
-            expect(mensajes.guardar).not.toBeCalled();
+            messages.clear();
+            messages.save.mockClear();
+            expect(messages.save).not.toBeCalled();
 
-            let ops = [
-                {method: 'removeReference', args: {id: 3, key: inputData[1].key}},
-                {method: 'removeReference', args: {id: 0, key: inputData[0].key}},
-                {
-                    method: 'put', args: [
-                        new Reference({key: inputData[1].key, index: 2})
-                    ]
-                }, // id: 8
-                {
-                    method: 'put', args: [
-                        new Reference({key: 'j4', index: 7})
-                    ]
-                }, // id: 9
-            ];
+            [
+                {method: 'removeReference', args: [3, 'a3']},
+                {method: 'removeReference', args: [0, 'a2']},
+                {method: 'put', args: [new Reference({key: 'a3', index: 2})]}, // id: 8
+                {method: 'put', args: [new Reference({key: 'j4', index: 7})]}, // id: 9
+            ].forEach(op => myDSM[op.method](...op.args));
 
-            ops.forEach(op => myDSM[op.method](...Object.values(op.args)));
-
-            expect(mensajes.guardar).toBeCalledWith(
+            expect(messages.save).toBeCalledWith(
                 SourceTypes.CITATION_DOCUMENT,
                 lgTopics.SOURCE_ORDER_CHANGE,
                 expect.objectContaining({
                     i: expect.any(Number)
                 })
             );
-
-            // let expectedData = [
-            //     { // order: 3
-            //         key: 'a2',
-            //         indexes: [
-            //             12, // 1
-            //             15 // 2
-            //         ]
-            //     }, { // 0
-            //         key: 'a3',
-            //         indexes: [
-            //             2 // 8
-            //             19, // 4
-            //             25 // 5
-            //         ]
-            //     }, { // 1
-            //         key: 'b3',
-            //         indexes: [
-            //             6, // 6
-            //             90 // 7
-            //         ]
-            //     } { // 2
-            //         key: 'j4',
-            //         indexes: [
-            //             7, // 9
-            //         ]
-            //     }
-            // ];
 
             expect(myDSM.sourceIndex('a3')).toBe(0);
             expect(myDSM.sourceIndex('b3')).toBe(1);
@@ -639,52 +592,46 @@ describe('Reference', () => {
         });
     });
 
+    // Sources List test
 
-    it('sin _DSM  arroja error', () => {
+    it('Without Document Sources Model throws error', () => {
         expect(() => new SourcesList()).toThrow();
     });
 
-    it('devuelve el tipo de fuente', () => {
+    it('Returns the Source type', () => {
         const mySL = new SourcesList(myDSM);
         expect(mySL.type).toBe(myDSM.type);
     });
 
-    it('Modificar la lista obtenida no altera la lista original', () => {
+    it('Modifying the returned list do not alter the original list', () => {
         const mySL = new SourcesList(myDSM);
         const myList = mySL.list;
-        // modifie the list in SL.
         expect(mySL.list).toEqual(myList);
+        // modify the list in SL.
         myList.push('something');
         expect(mySL.list).not.toEqual(myList);
-        // console.log(mySL.list + '\n' + myList);
     });
 
-    it('La lista sombra es actualizada', () => {
+    it('The shadow list is updated', () => {
         const myShadowData = {};
         const mySL = new SourcesList(myDSM, myShadowData);
 
-        let myRefs = getRefs([
+        let refsScenario = getRefs([
             {key: 'a5', indexes: [33, 24]},
             {key: 'a4', indexes: [40, 10, 33]}
         ]);
 
-        myRefs.forEach(ref => myDSM.put(ref));
+        refsScenario.forEach(ref => myDSM.put(ref));
 
-        // add elements to _DSM and modify de list.
         expect(mySL.list).toEqual(myShadowData.list);
-        // expect(mySL.list).not.toBe(myShadowData.list);
-        // expect(mockGet).toBeCalled();
-        // expect(mockSet).toBeCalled();
-        // console.log(mySL.list + "\n" + myShadowData.list);
     });
 
-    it('almacena adecuadamente fuentes iniciales del _DSM', () => {
-        let myRefs = getRefs([
+    it('Sotres as expected initial sources of the DSM', () => {
+        getRefs([
             {key: 'a5', indexes: [33, 24]},
             {key: 'a4', indexes: [40, 10, 33]}
-        ]);
+        ]).forEach(ref => myDSM.put(ref));
 
-        myRefs.forEach(ref => myDSM.put(ref));
         const mySL = new SourcesList(myDSM, data);
         expect(mySL.i(0)).toBe(myDSM.sourceByI(0).key);
         expect(mySL.i(1)).toBe(myDSM.sourceByI(1).key);
@@ -694,65 +641,59 @@ describe('Reference', () => {
         ]);
     });
 
-    it('agrega adecuadamente nuevas fuentes _DSM', () => {
-        let myRefs1 = getRefs([
+    it('It adds as expected to the list new sources of the DSM', () => {
+        let refsScenario1 = getRefs([
             {key: 'a5', indexes: [33, 24]},
         ]);
 
-        let myRefs2 = getRefs([
+        let refsScenario2 = getRefs([
             {key: 'a4', indexes: [40, 10, 33]}
         ]);
 
-        myRefs1.forEach(ref => myDSM.put(ref));
+        refsScenario1.forEach(ref => myDSM.put(ref));
         const mySL = new SourcesList(myDSM, data);
-        expect(mySL.i(0)).toBe(myDSM.sourceByI(0).key);
-        expect(data.list).toEqual([
-            myDSM.sourceByI(0).key,
-        ]);
+        expect(mySL.i(0)).toBe('a5');
+        expect(data.list).toEqual(['a5']);
 
-        myRefs2.forEach(ref => myDSM.put(ref));
-        expect(mySL.i(0)).toBe(myDSM.sourceByI(0).key);
-        expect(mySL.i(1)).toBe(myDSM.sourceByI(1).key);
-        expect(data.list).toEqual([
-            myDSM.sourceByI(0).key,
-            myDSM.sourceByI(1).key
-        ]);
-
+        refsScenario2.forEach(ref => myDSM.put(ref));
+        expect(mySL.i(0)).toBe('a4');
+        expect(mySL.i(1)).toBe('a5');
+        expect(data.list).toEqual(['a4','a5']);
     });
 
-    it('actualiza adecuadamente ante deleciones-inserciones nuevas', () => {
-        let inputData = [
+    it('It updates as expected after new insertions and removals.', () => {
+        let refsScenario = [
             {
                 key: 'a2',
-                indexes: [
-                    5, // id: 0
-                    12, // 1
-                    15 // 2
+                indexes: [  // Reference ID
+                    5,      // 0
+                    12,     // 1
+                    15      // 2
                 ]
             }, {
                 key: 'a3',
                 indexes: [
-                    3, // 3
-                    19, // 4
-                    25 // 5
+                    3,      // 3
+                    19,     // 4
+                    25      // 5
                 ]
             }, {
                 key: 'b3',
                 indexes: [
-                    6, // 6
-                    90 // 7
+                    6,      // 6
+                    90      // 7
                 ]
             }
         ];
 
-        let myRefs = getRefs(inputData);
+        let myRefs = getRefs(refsScenario);
 
         myRefs.forEach(ref => myDSM.put(ref));
         const mySL = new SourcesList(myDSM, data);
 
-        expect(myDSM.sourceIndex(inputData[0].key)).toBe(1);
-        expect(myDSM.sourceIndex(inputData[1].key)).toBe(0);
-        expect(myDSM.sourceIndex(inputData[2].key)).toBe(2);
+        expect(myDSM.sourceIndex('a2')).toBe(1);
+        expect(myDSM.sourceIndex('a3')).toBe(0);
+        expect(myDSM.sourceIndex('b3')).toBe(2);
 
         expect(mySL.i(0)).toBe(myDSM.sourceByI(0).key);
         expect(mySL.i(1)).toBe(myDSM.sourceByI(1).key);
@@ -763,62 +704,26 @@ describe('Reference', () => {
             myDSM.sourceByI(2).key
         ]);
 
-        mensajes.clear();
-        mensajes.guardar.mockClear();
-        expect(mensajes.guardar).not.toBeCalled();
+        messages.clear();
+        messages.save.mockClear();
+        expect(messages.save).not.toBeCalled();
 
         let ops = [
-            {method: 'removeReference', args: {id: 3, key: inputData[1].key}},
-            {method: 'removeReference', args: {id: 0, key: inputData[0].key}},
-            {
-                method: 'put', args: [
-                    new Reference({key: inputData[1].key, index: 2})
-                ]
-            }, // id: 8
-            {
-                method: 'put', args: [
-                    new Reference({key: 'j4', index: 7})
-                ]
-            }, // id: 9
+            {method: 'removeReference', args: [3, refsScenario[1].key]},
+            {method: 'removeReference', args: [0, refsScenario[0].key]},
+            {method: 'put', args: [new Reference({key: refsScenario[1].key, index: 2})]}, // id: 8
+            {method: 'put', args: [new Reference({key: 'j4', index: 7})]}, // id: 9
         ];
 
-        ops.forEach(op => myDSM[op.method](...Object.values(op.args)));
+        ops.forEach(op => myDSM[op.method](...op.args));
 
-        expect(mensajes.guardar).toBeCalledWith(
+        expect(messages.save).toBeCalledWith(
             SourceTypes.CITATION_DOCUMENT,
             lgTopics.SOURCE_ORDER_CHANGE,
             expect.objectContaining({
                 i: expect.any(Number)
             })
         );
-
-        // let expectedData = [
-        //     { // order: 3
-        //         key: 'a2',
-        //         indexes: [
-        //             12, // 1
-        //             15 // 2
-        //         ]
-        //     }, { // 0
-        //         key: 'a3',
-        //         indexes: [
-        //             2 // 8
-        //             19, // 4
-        //             25 // 5
-        //         ]
-        //     }, { // 1
-        //         key: 'b3',
-        //         indexes: [
-        //             6, // 6
-        //             90 // 7
-        //         ]
-        //     } { // 2
-        //         key: 'j4',
-        //         indexes: [
-        //             7, // 9
-        //         ]
-        //     }
-        // ];
 
         expect(myDSM.sourceIndex('a3')).toBe(0);
         expect(myDSM.sourceIndex('b3')).toBe(1);
