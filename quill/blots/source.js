@@ -1,5 +1,3 @@
-/** @typedef {import('../../DSM/SourceTypes').SourcesTypes} SourceTypes */
-
 import Embed from "quill/blots/embed";
 import lgEvents, {lgTopics} from "../../utils/events";
 
@@ -9,7 +7,6 @@ import lgEvents, {lgTopics} from "../../utils/events";
  * @property {string} key - A string to identify the source.
  * @property {SourceTypes} type - The type of source.
  */
-
 
 /** Quill's Embed Blot to represent some Source*/
 class SourceBlot extends Embed {
@@ -41,7 +38,6 @@ class SourceBlot extends Embed {
             type: node.dataset.type
         }
     }
-
 
     constructor(scroll, node) {
         super(scroll, node);
