@@ -1,10 +1,7 @@
 import {SourceTypes} from '../../DSM/SourceTypes';
 import lgEvents, {lgTopics} from "../../utils/events";
 
-const mockListener = jest.fn(function (type, topic, data) {
-    // console.log('Escuché:', type, topic, data);
-    // console.log('ademas, this:', this);
-});
+const mockListener = jest.fn();
 
 const myListener = {
     msjs: [],
@@ -44,7 +41,6 @@ it('When specified, the events are listened only once', () => {
     expect(mockListener).toHaveBeenCalledTimes(1);
 });
 
-// it('Se pueden vincular referencias a \'this\' particulares', () => {
 it('Is posible to bind \'this\' refernces', () => {
     lgEvents.clear(SourceTypes.CITATION_DOCUMENT, lgTopics.SOURCE_ORDER_CHANGE);
 
