@@ -20,7 +20,7 @@ const myListener = {
     }
 };
 
-it('Se escucha eventos adecuadamente', () => {
+it('Listens to events as expected.', () => {
    lgEvents.on(SourceTypes.CITATION_DOCUMENT, lgTopics.SOURCE_ORDER_CHANGE, mockListener);
    lgEvents.emit(SourceTypes.CITATION_DOCUMENT, lgTopics.SOURCE_ORDER_CHANGE, {saludo:'hola'});
    expect(mockListener).toBeCalledWith(
@@ -30,7 +30,7 @@ it('Se escucha eventos adecuadamente', () => {
    )
 });
 
-it('Se escuchan los eventos solo una vez', () => {
+it('When specified, the events are listened only once', () => {
     lgEvents.clear(SourceTypes.CITATION_DOCUMENT, lgTopics.SOURCE_ORDER_CHANGE);
     mockListener.mockClear();
 
@@ -44,7 +44,8 @@ it('Se escuchan los eventos solo una vez', () => {
     expect(mockListener).toHaveBeenCalledTimes(1);
 });
 
-it('Se pueden vincular referencias a \'this\' particulares', () => {
+// it('Se pueden vincular referencias a \'this\' particulares', () => {
+it('Is posible to bind \'this\' refernces', () => {
     lgEvents.clear(SourceTypes.CITATION_DOCUMENT, lgTopics.SOURCE_ORDER_CHANGE);
 
     lgEvents.on(SourceTypes.CITATION_DOCUMENT, lgTopics.SOURCE_ORDER_CHANGE, myListener.listen.bind(myListener));
@@ -64,12 +65,11 @@ it('Se pueden vincular referencias a \'this\' particulares', () => {
     }))
 });
 
-it('Se puede escuchar eventos generales', () => {
+it('Is posible to listen general events.', () => {
     myListener.clear();
     myListener.listen.mockClear();
     lgEvents.reset();
     lgEvents.onAny(myListener.listen, myListener);
-
 
     lgEvents.emit(SourceTypes.CITATION_DOCUMENT, lgTopics.SOURCE_ORDER_CHANGE, {saludo:'hola'});
     lgEvents.emit('puuu', 'cualquiera', {saludo:'hola'});
@@ -86,5 +86,4 @@ it('Se puede escuchar eventos generales', () => {
         topic:'cualquiera',
         data:expect.objectContaining({saludo:expect.any(String)})
     }))
-
 });
