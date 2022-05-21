@@ -23,8 +23,10 @@ it('is called by Quill', () => {
 });
 
 describe ('Custom citation', () => {
-    let quill = null;
-    let container = null;
+    /** @type {Quill} */
+    let quill;
+    let container;
+    /** @type {Citations} */
     let modCitations = null;
 
     beforeAll(() => {
@@ -68,11 +70,6 @@ describe ('Custom citation', () => {
             update: mockUpdate
         };
 
-        /**
-         *  data{key, n, i[source index]}
-         *  node [citation node]
-         *  controller [source controller -citation]
-         */
         quill = new Quill(container, {
             modules: {
                 citation: {
@@ -112,6 +109,7 @@ describe ('Custom citation', () => {
             }
         });
 
+        
         modCitations = quill.getModule('citation');
 
         const key = 'a2';
@@ -127,25 +125,24 @@ describe ('Custom citation', () => {
         expect(citationNode.innerHTML).toMatch(expectedText);
         expect(citationNode.getAttribute('title')).toMatch(source.title);
 
-        // console.log('RESULTADO: \n', quill.scroll.domNode.innerHTML);
         expect(mockUpdate).toBeCalled();
 
         mockUpdate.mockClear();
         let ref = modCitations.source(key).first;
-        // console.log(quill.scroll.domNode.innerHTML);
 
         expect(mockUpdate).not.toBeCalled();
         quill.deleteText(ref.index, 1);
 
-        // console.log('POS-BORRADO: \n', quill.scroll.domNode.innerHTML);
         expect(mockUpdate).toBeCalled();
     });
 });
 
 describe ('Module operations', () => {
-    let quill = null;
-    let container = null;
-    let modCitations = null;
+    /** @type {Quill} */
+    let quill;
+    let container;
+    /** @type {Citations} */
+    let modCitations;
 
     beforeAll(() => {
         Quill.register('modules/citation', Citations);
@@ -155,7 +152,7 @@ describe ('Module operations', () => {
 
     beforeEach(() => {
         // console.log('......INICIANDO......');
-        quill = null;
+        // quill = null;
         document.body.innerHTML = '<div id="editor"></div>';
         container = document.getElementById('editor');
         quill = new Quill(container, {
@@ -236,14 +233,11 @@ describe ('Module operations', () => {
         expect(modCitations.data.list).toEqual([key]);
     });
 
-
-
-    it('emits events on new and update reference/s', done => {
+    it('emits events on new and updated reference/s', done => {
         const sourceKey = 'a3';
 
         function registrado(type, topic, data) {
             try {
-                // console.log('Registrado', type, topic, data.index);
                 expect(data.index).toBe(0);
                 expect(data.controller).toBe(modCitations);
                 expect(data.reference).toBeInstanceOf(Reference);
@@ -269,10 +263,7 @@ describe ('Module operations', () => {
         );
 
         modCitations.put(sourceKey);
-
     });
-
-
 
     it('inserts a reference', done => {
         const sourceKey = 'a3';
@@ -312,11 +303,8 @@ describe ('Module operations', () => {
         );
 
         const delta = modCitations.put(sourceKey);
-        // console.log(delta.ops[0]);
+
         expect(delta.ops[0]).toMatchObject(sourceDelta);
-        // console.log(delta);
-        // console.log(JSON.stringify(quill.getContents().ops[0]));
-        // expect(quill.getContents().ops[0]).toEqual(expect.objectContaining(sourceDelta));
         expect(quill.getContents().ops[0]).toMatchObject(sourceDelta);
     });
 
@@ -328,27 +316,24 @@ describe ('Module operations', () => {
             lgTopics.SOURCE_REGISTRY_NEW,
             registrado
         );
+
         function registrado(type, topic, data) {
             try {
-                // console.log('Registrado', type, topic, data.index);
+
                 expect(data.index).toBe(0); // index (order) de fuente.
-                // se actualiza lista de fuentes.
-                // console.log(modCitations.data.list);
-                // console.log(modCitations.SList);
+
                 expect(modCitations.data.list).toMatchObject([key]);
+
                 expect(modCitations.data.list[data.index]).toBe(key);
 
-                // Chaining
-                // console.log('modCitations.source(key): ', modCitations.source(key));
                 expect(modCitations.source(key)).toBeInstanceOf(SourceReferencesModel);
 
                 let id = modCitations.source(key).first.id;
 
-                // console.log('modCitations.source(key).get(' + id + '): ', modCitations.source(key).get(id));
                 expect(modCitations.source(key).get(id)).toBeInstanceOf(Reference);
-                // console.log('modCitations.source(key).get(' + id + ').index: ', modCitations.source(key).get(id).index);
+
                 expect(modCitations.source(key).get(id).index).toEqual(expect.any(Number));
-                // console.log('modCitations.source(key).get(' + id + ').blot: ', modCitations.source(key).get(id).blot);
+
                 expect(modCitations.source(key).get(id).blot).toBeInstanceOf(SourceBlot);
 
                 done();
@@ -390,7 +375,7 @@ describe ('Module operations', () => {
 
 
 
-    it('makes the citation node with expected attributes', done => {
+    it('The citation node is as expected', done => {
         // console.log(':::::Formatea adecuadamente la cita::::::');
         const key = 'a3';
 
@@ -416,8 +401,6 @@ describe ('Module operations', () => {
         modCitations.put(key);
     });
 
-        
-
     it('numbers accordingly the citation', done => {
         // console.log('::::::Numera adecuadamente la cita:::::::::');
         const key = 'a3';
@@ -437,7 +420,6 @@ describe ('Module operations', () => {
 
         const keys = ['a3', 'a4'];
 
-
         lgEvents.on(
             SourceTypes.CITATION_DOCUMENT,
             lgTopics.SOURCE_UPDATED,
@@ -445,10 +427,7 @@ describe ('Module operations', () => {
         );
 
         keys.forEach(key => modCitations.put(key));
-
     });
-
-    
 
     it('removes the citation as expected', done => {
 
@@ -514,7 +493,6 @@ describe ('Module operations', () => {
 
         let lastRef = testData.keysSets[1][0];
         modCitations.put(lastRef.key, lastRef.index);
-
     });
 
     
@@ -606,21 +584,21 @@ describe ('Module operations', () => {
 
             // console.log('testdata:', Object.keys(testData));
 
-            let content = quill.scroll.domNode;
-            let sources = $$('.' + SourceBlot.className, content);
-            // console.log('content: \n %s \n\n sources:\n %o', content.innerHTML,
-            //     Array.from(sources.values()).map(n => n.outerHTML));
-            // console.log('SOURCE NODES: ', sources.length);
-            let i, node, key, refID, citN, modelN;
-            for ([i, node] of sources.entries()) {
-                key = node.dataset.key;
-                refID = node.dataset.id;
-                citN = $('.' + modCitations.class, node).dataset.n;
-                modelN = modCitations.i(key) + 1;
-                // console.log('i\tkey\tid\tn°\tmodelN\n' +
-                //     '%s\t%s\t%s\t%s\t%s', i, key, refID, citN, modelN);
-
-                expect(Number(citN)).toBe(modelN);
+            let QuillDocument = quill.scroll.domNode;
+            let sourceBlotsNodes = $$('.' + SourceBlot.className, QuillDocument);
+            // console.log('content: \n %s \n\n sourceBlotsNodes:\n %o', content.innerHTML,
+            //     Array.from(sourceBlotsNodes.values()).map(n => n.outerHTML));
+            // console.log('SOURCE NODES: ', sourceBlotsNodes.length);
+            let i, node, referenceKey, referenceId, referenceN, expectedN;
+            for ([i, node] of sourceBlotsNodes.entries()) {
+                referenceKey = node.dataset.key;
+                referenceId = node.dataset.id;
+                referenceN = $('.' + modCitations.class, node).dataset.n;
+                expectedN = modCitations.i(referenceKey) + 1;
+                // console.log('i\tkey\tid\tn°\texpectedN\n' +
+                //     '%s\t%s\t%s\t%s\t%s', i, key, BlotID, referenceN, expectedN);
+                //
+                expect(Number(referenceN)).toBe(expectedN);
             }
 
             done();
@@ -659,31 +637,22 @@ describe ('Module operations', () => {
 
             // console.log('testdata:', Object.keys(testData));
 
-            let content = quill.scroll.domNode;
-            let sources = $$('.' + SourceBlot.className, content);
-            // console.log('content: \n %s \n\n sources:\n %o', content.innerHTML,
-            //     Array.from(sources.values()).map(n => n.outerHTML));
-            let i, node, key, refID, citN,
-                expKey, expN;
-            for ([i, node] of sources.entries()) {
-                key = node.dataset.key;
-                refID = Number(node.dataset.id);
-                citN = Number($('.' + modCitations.class, node).dataset.n);
-
-                expKey = testData.finalExpectedOrder[i].key;
-                expN = testData.finalExpectedOrder[i].n;
-
-
+            let QuillDocument = quill.scroll.domNode;
+            let sourceBlotsNodes = $$('.' + SourceBlot.className, QuillDocument);
+            // console.log('QuillDocument: \n %s \n\n sourceBlotsNodes:\n %o', QuillDocument.innerHTML,
+            //     Array.from(sourceBlotsNodes.values()).map(n => n.outerHTML));
+            let i, node, referenceKey, referenceID, citationN;
+            for ([i, node] of sourceBlotsNodes.entries()) {
+                referenceKey = node.dataset.key;
+                referenceID = Number(node.dataset.id);
+                citationN = Number($('.' + modCitations.class, node).dataset.n);
+                expect(referenceKey).toBe( testData.finalExpectedOrder[i].key);
+                expect(citationN).toBe( testData.finalExpectedOrder[i].n);
                 // console.log('status\ti\tkey\tid\tn°\n' +
                 //     'Found\t%s\t%s\t%s\t%s\n' +
                 //     'Exp.\t \t%s\t \t%s',
-                //     i, key, refID, citN, expKey, expN);
-
-                expect(key).toBe(expKey);
-                expect(citN).toBe(expN);
+                //     i, key, referenceID, citationN, expKey, expN);
             }
-
-
             done();
         } catch (e) {
             done(e);
@@ -715,7 +684,7 @@ describe('Citations extension', () => {
         let modImages = quill.getModule('image');
         const key = 'gato'
         modImages.put(key);
-        expect(true).toBe(true);
+        // expect(true).toBe(true);
         // console.log(container.innerHTML);
         let sourceNode = $('.' + SourceBlot.className, container);
         let citationNode = $('.' + modImages.class, sourceNode);
@@ -726,7 +695,6 @@ describe('Citations extension', () => {
         expect(sourceNode.dataset.type).toBe(Imagen.type);
         expect(citationNode.classList.contains(Imagen.class)).toBe(true);
         expect(Number(citationNode.dataset.n)).toBe(modImages.i(key) + 1);
-        
     });
 
 

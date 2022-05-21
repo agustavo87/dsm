@@ -57,6 +57,10 @@ export default class Citations {
         lgEvents.on(this._type, lgTopics.SOURCE_EMBED_UNMOUNTED, this.unregister.bind(this));
         lgEvents.on(this._type, lgTopics.SOURCE_REFERENCE_ADDED, this.update.bind(this));
         lgEvents.on(this._type, lgTopics.SOURCE_ORDER_CHANGE, this.updateAll.bind(this));
+        // Seems that here is missed SOURCE_REFERENCE_ADDED_REORDERED, this one is specifically triggered
+        // when the source is the first of the sources AND the first of its key.
+        // This may trigger the update event, after the Refernce has been positioned.
+        // If this doesn't happen, it may not have oportunity to render the 'i' parameter.
     }
 
     config(options) {
@@ -70,6 +74,15 @@ export default class Citations {
         }
     }
 
+    /**
+     * @listens SOURCE_EMBED_MOUNTED
+     * @emits SOURCE_REGISTRY_NEW
+     * 
+     * @param {string} type 
+     * @param {string} topic 
+     * @param {string} data 
+     * @returns 
+     */
     register(type, topic, data) {
         if (this.quill.scroll !== data.blot.scroll) {
             // console.warn('[Citation.register]: llamada desde una instancia distinta de quill.');
@@ -117,6 +130,14 @@ export default class Citations {
         return true;
     }
 
+    /**
+     * @listens SOURCE_EMBED_UNMOUNTED
+     * 
+     * @param {string} type 
+     * @param {string} topic 
+     * @param {string} data 
+     * @returns 
+     */
     unregister(type, topic, data) {
         // console.log('desregistrado blot id°', data.blot.id);
         let id = data.blot.id,
@@ -149,6 +170,14 @@ export default class Citations {
         return i;
     }
 
+    /**
+     * @listens SOURCE_ORDER_CHANGE
+     * @emits SOURCE_UPDATED
+     * 
+     * @param {string} type 
+     * @param {string} topic 
+     * @param {string} data 
+     */
     updateAll(type, topic, data) {
         let refsUpdated = new Map;
 
@@ -188,6 +217,13 @@ export default class Citations {
         lgEvents.emit(this._type, lgTopics.SOURCE_UPDATED, {references: refsUpdated, target: this});
     }
 
+    /**
+     * @listens SOURCE_REFERENCE_ADDED
+     * @emits SOURCE_UPDATED
+     * @param {string} type 
+     * @param {string} topic 
+     * @param {string} data 
+     */
     update(type, topic, data) {
         let i = this._DSM.sourceIndex(data.reference.key);
         this.handlers.update(

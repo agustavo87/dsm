@@ -29,6 +29,11 @@ export default class DocumentSourcesModel {
     /**
      * Adds a Reference
      *
+     * @emits SOURCE_REFERENCE_ADDED
+     * @emits SOURCE_REFERENCE_ADDED_REORDERED
+     * @emits SOURCE_ORDER_CHANGE
+     * @emits ERROR
+     * 
      * @param {Reference}
      * @returns {number} Source index after updateAll.
      */
@@ -59,6 +64,7 @@ export default class DocumentSourcesModel {
                 * change the order relative to other sources.
                 */
                 // The reorderings will be emited unless is the first reference.
+                
                if (firstSourceKey != Reference.key) {
                   lgEvents.emit(this._type, lgTopics.SOURCE_ORDER_CHANGE, {i:i, target:this});
                }
@@ -81,25 +87,26 @@ export default class DocumentSourcesModel {
     }
 
     /**
-     * Locate a determined source (model) in certain order in the model
-     * of sources, by the index of its first element.
-     *
+     * Locate a Source by the index of its first References
+     * 
+     * Locate a source in the sources array by the position (index)
+     * of the first ocurrence of its Reference.
+     * 
      * @param {SourceReferencesModel} SourceModel
-     * @returns {number} i - The order in wich the model was located.
+     * @returns {number} The order in wich the model was located.
      */
     _locate(SourceModel) {
-        let locatingSMIndex = SourceModel.first.index;
-        let i = this._sources.length;
-        while (i - 1 > -1) {
-            if (this._sources[i-1].first.index > locatingSMIndex) {
-                i--;
-            } else {
-                break;
+        let lastSourcesIndex = this._sources.length - 1;
+        while (lastSourcesIndex >= 0) {
+            if (this._sources[lastSourcesIndex].first.index > SourceModel.first.index) {
+                lastSourcesIndex--
+                continue
             }
+            break;
         }
-        this._sources.splice(i,0,SourceModel);
-        // lgEvents.emit(this._type, lgTopics.SOURCE_ORDER_CHANGE, {i:i});
-        return i;
+        let newIndex = lastSourcesIndex + 1
+        this._sources.splice(newIndex,0,SourceModel);
+        return newIndex;
     }
 
     /**
@@ -131,6 +138,9 @@ export default class DocumentSourcesModel {
     /**
      * Removes a reference by its id and or key.
      *
+     * @emits SOURCE_REFERENCE_REMOVED
+     * @emits SOURCE_ORDER_CHANGE
+     * @emits ERROR
      * @param {number} id - The id of the SourceBlot of the Reference
      * @param {string} key - The key of the source of the reference.
      * @returns {number} The i of the reference, or -1 if error
