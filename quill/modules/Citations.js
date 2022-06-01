@@ -57,6 +57,7 @@ export default class Citations {
         lgEvents.on(this._type, lgTopics.SOURCE_EMBED_UNMOUNTED, this.unregister.bind(this));
         lgEvents.on(this._type, lgTopics.SOURCE_REFERENCE_ADDED, this.update.bind(this));
         lgEvents.on(this._type, lgTopics.SOURCE_ORDER_CHANGE, this.updateAll.bind(this));
+        lgEvents.on(this._type, lgTopics.SOURCE_REFERENCE_ADDED_REORDERED, this.updateAll.bind(this));
         // Seems that here is missed SOURCE_REFERENCE_ADDED_REORDERED, this one is specifically triggered
         // when the source is the first of the sources AND the first of its key.
         // This may trigger the update event, after the Refernce has been positioned.

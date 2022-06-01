@@ -538,7 +538,27 @@ describe ('Module operations', () => {
         quill.deleteText(firstRef.index, 1);
     });
 
-    
+    it('Numerates as expected when a Reference of the first source is inserted first.', done => {
+        // console.log('......REORGANIZAR NUMERACIÓN................');
+
+        const testData = {
+            keysSets: [
+                [
+                    {index: -1, key: 'a2'},
+                    {index: 0, key: 'a2'}
+                ]
+            ],
+            finalExpectedOrder: [
+                {key: 'a2', n: 1},
+                {key: 'a2', n: 1},
+            ]
+        };
+
+        testData.keysSets[0].forEach(ref => modCitations.put(ref.key, ref.index));
+
+        checkCorrespondence(done, testData)
+    });
+
 
     it('reorders the numeration on masive deletion', done => {
         // console.log('......REORGANIZAR Con borrado conjunto................');
